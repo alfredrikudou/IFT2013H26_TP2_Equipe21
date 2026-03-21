@@ -1,34 +1,32 @@
+using System;
+using System.Linq;
 using Controls;
+using Controls.Device;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Player
 {
-    public class Player : MonoBehaviour, IDeviceSelector
+    public class Player : MonoBehaviour
     {
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        DeviceSelector _deviceSelector;
+        
         void Start()
         {
-        
+            _deviceSelector = new DeviceSelector("PlayerName");
+            var dm = DeviceManager.Instance;
+            dm.BindDevice(_deviceSelector, dm.GetAvailableDevices().First());
         }
 
-        // Update is called once per frame
         void Update()
         {
-        
-        }
-
-        public void BindDevice(InputDevice device)
-        {
-        }
-
-        public void UnBindDevice()
-        {
-        }
-
-        public string GetSelectorName()
-        {
-            return "Player";
+            if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                var newdevice = DeviceManager.Instance.GetAvailableDevices().First();
+                // DeviceManager.Instance.UnbindDeviceByDevice(_deviceSelector.BoundDevice);
+                DeviceManager.Instance.BindDevice(_deviceSelector, newdevice);
+                Debug.Log(_deviceSelector.BoundDevice.path);
+            }
         }
     }
 }

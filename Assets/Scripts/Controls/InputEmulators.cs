@@ -1,62 +1,92 @@
 using UnityEngine;
+using UnityEngine.InputSystem.Controls;
 
 namespace Controls
 {
-    public class AxisEmulator : MonoBehaviour
+    public class AxisEmulator : ICustomSerializable
     {
-        public float Sensitivity;
-        public float Gravity;
-        public float DeadZone;
-        public string PlusAction;
-        public string MinusAction;
-        private InputManager im;
-        public float V { get; private set; }
+        private readonly float _sensitivity;
+        private readonly float _gravity;
+        private readonly float _deadZone;
+        private readonly MappableAction _plusAction;
+        private readonly MappableAction _minusAction;
+        private readonly InputManager _im;
+        public float Value { get; private set; }
 
-        public void Start()
+        public string Serialize() => $"AxisEmulator:sensitivity={_sensitivity},gravity={_gravity}," +
+                                     $"deadzone={_deadZone},plusAction={_plusAction.ToString()}," +
+                                     $"minusAction={_minusAction.ToString()}";
+
+        public AxisEmulator(MappableAction plusAction, MappableAction minusAction, float sensitivity, float gravity, float deadZone)
         {
-            V = 0;
-            im = InputManager.Instance;
+            _plusAction = plusAction;
+            _minusAction = minusAction;
+            _sensitivity = sensitivity;
+            _gravity = gravity;
+            _deadZone = deadZone;
+            Value = 0;
+            _im = InputManager.Instance;
         }
 
-        public void Update()
+        public void Tick()
         {
-            if (im.GetActionDown(PlusAction))
+            if (_im.GetActionDown(_plusAction))
             {
-                V = Mathf.Min(V + Sensitivity, 1f);
+                Value = Mathf.Min(Value + _sensitivity, 1f);
             }
-            else if (im.GetActionDown(MinusAction))
+            else if (_im.GetActionDown(_minusAction))
             {
-                V = Mathf.Max(V - Sensitivity, -1f);
+                Value = Mathf.Max(Value - _sensitivity, -1f);
             }
-            else if (V >= DeadZone)
+            else if (Value >= _deadZone)
             {
-                V -= Gravity;
+                Value -= _gravity;
             }
-            else if (V <= -DeadZone)
+            else if (Value <= -_deadZone)
             {
-                V += Gravity;
+                Value += _gravity;
             }
             else
             {
-                V = 0;
+                Value = 0;
             }
         }
     }
     
-    public class StickEmulator : MonoBehaviour
+    public class StickEmulator : IStick
     {
-        public AxisEmulator XAxis;
-        public AxisEmulator Yaxis;
-        public Vector2 V { get; private set; }
+        private readonly AxisEmulator _xAxis;
+        private readonly  AxisEmulator _yAxis;
+        public Vector2 Value { get; private set; }
+        public Vector2 ReadValue() => Value;
+        public string Serialize() => $"StickEmulator:xAxis={_xAxis.Serialize()},yAxis={_yAxis.Serialize()}";
 
-        public void Start()
+        public StickEmulator(AxisEmulator xAxis, AxisEmulator yaxis)
         {
-            V = new Vector2(0f, 0f);
+            _xAxis = xAxis;
+            _yAxis = yaxis;
+            Value = new Vector2(0f, 0f);
         }
 
-        public void Update()
+
+        public void Tick()
         {
-            V = Vector2.ClampMagnitude(new Vector2(XAxis.V,Yaxis.V), 1f);
+            _xAxis.Tick();
+            _yAxis.Tick();
+            Value = Vector2.ClampMagnitude(new Vector2(_xAxis.Value,_yAxis.Value), 1f);
         }
     }
+
+    public class UnityStick : IStick
+    {
+        private readonly StickControl _stick;
+        public UnityStick(StickControl stick) => _stick = stick;
+        public Vector2 ReadValue() => _stick?.ReadValue() ?? Vector2.zero;
+        public string Serialize() => $"UnityStick:path={_stick?.path ?? ""}";
+    }
+
+    public interface IStick : ICustomSerializable
+    {
+        public Vector2 ReadValue();
+    } 
 };

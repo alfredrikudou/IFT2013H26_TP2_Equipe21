@@ -1,0 +1,11 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/WormsUI/MainMenuStyleSheet.uss?fileID=7433441132597879392&amp;guid=69b46798252ac8d4e95861b64d4c8401&amp;type=3#MainMenuStyleSheet"/>
+    <ui:VisualElement name="panel-container" style="flex-grow: 1; background-image: url(&quot;project://database/Assets/WormsUI/HomeBgWorms.png?fileID=2800000&amp;guid=fcc49bc25f4f63140b5b0fd16fc68cd8&amp;type=3#HomeBgWorms&quot;); -unity-background-scale-mode: scale-and-crop;">
+        <ui:VisualElement name="center-panel" style="flex-grow: 1; background-size: 100% 100%; width: 567px; height: 50%; align-items: center; justify-content: center; align-self: center; align-content: flex-start;">
+            <ui:Label text="MAIN MENU" name="headline__label" style="-unity-font-definition: url(&quot;project://database/Assets/WormsUI/Fonts/ChelaOne-Regular.ttf?fileID=12800000&amp;guid=8c2226f5768e49f4ca5f58858a57cb7a&amp;type=3#ChelaOne-Regular&quot;); font-size: 55px; color: rgb(255, 255, 255); text-shadow: 2px 2px 0 rgb(0, 0, 0); margin-top: 240px;"/>
+            <ui:Button text="START GAME" name="start-game__button" class="menuRegularButton"/>
+            <ui:Button text="CREDITS" name="credits__button" class="menuRegularButton"/>
+            <ui:Button text="QUIT" name="quit__button" class="menuRegularButton" style="margin-bottom: 50px;"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

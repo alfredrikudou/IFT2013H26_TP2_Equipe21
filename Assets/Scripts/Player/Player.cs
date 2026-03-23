@@ -1,34 +1,28 @@
 using Controls;
+using Controls.InputBinding;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Player
 {
-    public class Player : MonoBehaviour, IDeviceSelector
+    public class Player : MonoBehaviour
     {
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        private static int playerCount = 0;
+        private string playerName = "";
+        PlayerControlManager _pcm;
+
         void Start()
         {
-        
+            _pcm = new PlayerControlManager();
+            playerName = $"Player{playerCount++}";
         }
 
-        // Update is called once per frame
         void Update()
         {
-        
-        }
-
-        public void BindDevice(InputDevice device)
-        {
-        }
-
-        public void UnBindDevice()
-        {
-        }
-
-        public string GetSelectorName()
-        {
-            return "Player";
+            if (_pcm.GetActionState(MappableAction.Shoot) == InputState.Pressed)
+            {
+                Debug.Log($"{playerName} has shot");
+            }
+            Debug.Log($"{playerName} move: {_pcm.GetActionValue(MappableAction.Move).ToString()}");
         }
     }
 }

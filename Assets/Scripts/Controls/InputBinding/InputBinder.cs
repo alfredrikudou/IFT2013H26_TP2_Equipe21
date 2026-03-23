@@ -8,7 +8,7 @@ namespace Controls.InputBinding
 {
     public class InputBinder
     {
-        private Dictionary<PlayerBind, InputType> bindTypes = new Dictionary<PlayerBind, InputType>
+        private readonly Dictionary<PlayerBind, InputType> _bindTypes = new Dictionary<PlayerBind, InputType>
         {
             { PlayerBind.KB_MoveLeft, InputType.Button },
             { PlayerBind.KB_MoveRight, InputType.Button },
@@ -29,30 +29,30 @@ namespace Controls.InputBinding
             { PlayerBind.GP_Pause, InputType.Button },
         };
 
-        Dictionary<PlayerBind, List<string>> binds = new Dictionary<PlayerBind, List<string>>
+        private readonly Dictionary<PlayerBind, List<string>> _binds = new Dictionary<PlayerBind, List<string>>
         {
-            { PlayerBind.KB_MoveLeft, new List<string> { "<Keyboard>/a", "<Keyboard>/leftArrow" } },
-            { PlayerBind.KB_MoveRight, new List<string> { "<Keyboard>/d", "<Keyboard>/rightArrow" } },
-            { PlayerBind.KB_MoveUp, new List<string> { "<Keyboard>/w", "<Keyboard>/upArrow" } },
-            { PlayerBind.KB_MoveDown, new List<string> { "<Keyboard>/s", "<Keyboard>/downArrow" } },
-            { PlayerBind.GP_Move, new List<string> { "<Gamepad>/leftStick" } },
+            { PlayerBind.KB_MoveLeft,  new List<string> { "a", "leftArrow" } },
+            { PlayerBind.KB_MoveRight, new List<string> { "d", "rightArrow" } },
+            { PlayerBind.KB_MoveUp,    new List<string> { "w", "upArrow" } },
+            { PlayerBind.KB_MoveDown,  new List<string> { "s", "downArrow" } },
+            { PlayerBind.GP_Move,      new List<string> { "leftStick" } },
 
-            { PlayerBind.KB_AimLeft, new List<string> { "<Keyboard>/leftArrow" } },
-            { PlayerBind.KB_AimRight, new List<string> { "<Keyboard>/rightArrow" } },
-            { PlayerBind.KB_AimUp, new List<string> { "<Keyboard>/upArrow" } },
-            { PlayerBind.KB_AimDown, new List<string> { "<Keyboard>/downArrow" } },
-            { PlayerBind.GP_Aim, new List<string> { "<Gamepad>/rightStick" } },
+            { PlayerBind.KB_AimLeft,   new List<string> { "leftArrow" } },
+            { PlayerBind.KB_AimRight,  new List<string> { "rightArrow" } },
+            { PlayerBind.KB_AimUp,     new List<string> { "upArrow" } },
+            { PlayerBind.KB_AimDown,   new List<string> { "downArrow" } },
+            { PlayerBind.GP_Aim,       new List<string> { "rightStick" } },
 
-            { PlayerBind.KB_Shoot, new List<string> { "<Keyboard>/space" } },
-            { PlayerBind.GP_Shoot, new List<string> { "<Gamepad>/rightTrigger", "<Gamepad>/buttonSouth" } },
+            { PlayerBind.KB_Shoot,     new List<string> { "space" } },
+            { PlayerBind.GP_Shoot,     new List<string> { "rightTrigger", "buttonSouth" } },
 
-            { PlayerBind.KB_Pause, new List<string> { "<Keyboard>/escape" } },
-            { PlayerBind.GP_Pause, new List<string> { "<Gamepad>/start" } },
+            { PlayerBind.KB_Pause,     new List<string> { "escape" } },
+            { PlayerBind.GP_Pause,     new List<string> { "start" } },
         };
 
         public void ChangeBind(PlayerBind bind, List<string> values)
         {
-            InputType expectedType = bindTypes[bind];
+            InputType expectedType = _bindTypes[bind];
 
             foreach (string value in values)
             {
@@ -65,123 +65,101 @@ namespace Controls.InputBinding
                 }
             }
 
-            binds[bind] = values;
+            _binds[bind] = values;
         }
 
         public Dictionary<MappableAction, List<IBindableInput>> CreateDeviceBind(params InputDevice[] devices)
         {
             var devicesMap = new Dictionary<MappableAction, List<IBindableInput>>();
 
-            void AppendOrCreate(MappableAction action, List<IBindableInput> inputs)
+            void AppendOrCreate(MappableAction action, IBindableInput input)
             {
-                if (!devicesMap.TryAdd(action, inputs))
-                    devicesMap[action].AddRange(inputs);
+                if (!devicesMap.ContainsKey(action))
+                    devicesMap[action] = new List<IBindableInput>{input};
+                else
+                    devicesMap[action].Add(input);
             }
+
             foreach (var inputDevice in devices)
             {
                 if (inputDevice is Keyboard keyboard)
                 {
                     // Move
-                    var moveLefts = new List<ButtonControl>();
-                    var moveRights = new List<ButtonControl>();
-                    var moveUps = new List<ButtonControl>();
-                    var moveDowns = new List<ButtonControl>();
-                    foreach (string path in binds[PlayerBind.KB_MoveLeft])
-                        if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            moveLefts.Add(c);
-                    foreach (string path in binds[PlayerBind.KB_MoveRight])
-                        if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            moveRights.Add(c);
-                    foreach (string path in binds[PlayerBind.KB_MoveUp])
-                        if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            moveUps.Add(c);
-                    foreach (string path in binds[PlayerBind.KB_MoveDown])
-                        if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            moveDowns.Add(c);
-                    if (moveLefts.Count > 0 && moveRights.Count > 0 && moveUps.Count > 0 && moveDowns.Count > 0)
-                        devicesMap.TryAdd(MappableAction.Move, new List<IBindableInput>())
-                            .Add(new CompositeStickInput(moveLefts, moveRights, moveUps, moveDowns));
+                    var moveStick = GetStickBindingsKb(keyboard, PlayerBind.KB_MoveLeft, PlayerBind.KB_MoveRight,
+                        PlayerBind.KB_MoveDown, PlayerBind.KB_MoveUp);
+                    if(moveStick != null)
+                        AppendOrCreate(MappableAction.Move, moveStick);
 
                     // Aim
-                    var aimLefts = new List<ButtonControl>();
-                    var aimRights = new List<ButtonControl>();
-                    var aimUps = new List<ButtonControl>();
-                    var aimDowns = new List<ButtonControl>();
-                    foreach (string path in binds[PlayerBind.KB_AimLeft])
-                        if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            aimLefts.Add(c);
-                    foreach (string path in binds[PlayerBind.KB_AimRight])
-                        if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            aimRights.Add(c);
-                    foreach (string path in binds[PlayerBind.KB_AimUp])
-                        if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            aimUps.Add(c);
-                    foreach (string path in binds[PlayerBind.KB_AimDown])
-                        if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            aimDowns.Add(c);
-                    if (aimLefts.Count > 0 && aimRights.Count > 0 && aimUps.Count > 0 && aimDowns.Count > 0)
-                        devicesMap.TryAdd(MappableAction.Aim, new List<IBindableInput>())
-                            .Add(new CompositeStickInput(aimLefts, aimRights, aimUps, aimDowns));
-
+                    var aimStick = GetStickBindingsKb(keyboard, PlayerBind.KB_AimLeft, PlayerBind.KB_AimRight,
+                        PlayerBind.KB_AimDown, PlayerBind.KB_AimUp);
+                    if(aimStick != null)
+                        AppendOrCreate(MappableAction.Aim, moveStick);
+                    
                     // Shoot
-                    foreach (string path in binds[PlayerBind.KB_Shoot])
+                    foreach (string path in _binds[PlayerBind.KB_Shoot])
                         if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            devicesMap.TryAdd(MappableAction.Shoot, new List<IBindableInput>()).Add(new ButtonInput(c));
-
+                            AppendOrCreate(MappableAction.Shoot, new BindableButton(c));
+                    
                     // Pause
-                    foreach (string path in binds[PlayerBind.KB_Pause])
+                    foreach (string path in _binds[PlayerBind.KB_Pause])
                         if (keyboard.TryGetChildControl(path) is ButtonControl c)
-                            devicesMap.TryAdd(MappableAction.Pause, new List<IBindableInput>()).Add(new ButtonInput(c));
+                            AppendOrCreate(MappableAction.Pause, new BindableButton(c));
                 }
                 else if (inputDevice is Gamepad gamepad)
                 {
                     // Move
-                    foreach (string path in binds[PlayerBind.GP_Move])
+                    foreach (string path in _binds[PlayerBind.GP_Move])
                         if (gamepad.TryGetChildControl(path) is StickControl c)
-                            devicesMap.TryAdd(MappableAction.Move, new List<IBindableInput>()).Add(new StickInput(c));
+                            AppendOrCreate(MappableAction.Move, new BindableStick(new UnityStick(c)));
 
                     // Aim
-                    foreach (string path in binds[PlayerBind.GP_Aim])
+                    foreach (string path in _binds[PlayerBind.GP_Aim])
                         if (gamepad.TryGetChildControl(path) is StickControl c)
-                            devicesMap.TryAdd(MappableAction.Aim, new List<IBindableInput>()).Add(new StickInput(c));
+                            AppendOrCreate(MappableAction.Aim, new BindableStick(new UnityStick(c)));
 
                     // Shoot
-                    foreach (string path in binds[PlayerBind.GP_Shoot])
+                    foreach (string path in _binds[PlayerBind.GP_Shoot])
                         if (gamepad.TryGetChildControl(path) is ButtonControl c)
-                            devicesMap.TryAdd(MappableAction.Shoot, new List<IBindableInput>()).Add(new ButtonInput(c));
+                            AppendOrCreate(MappableAction.Shoot, new BindableButton(c));
 
                     // Pause
-                    foreach (string path in binds[PlayerBind.GP_Pause])
+                    foreach (string path in _binds[PlayerBind.GP_Pause])
                         if (gamepad.TryGetChildControl(path) is ButtonControl c)
-                            devicesMap.TryAdd(MappableAction.Pause, new List<IBindableInput>()).Add(new ButtonInput(c));
+                            AppendOrCreate(MappableAction.Pause, new BindableButton(c));
                 }
             }
 
             return devicesMap;
         }
 
-        private IBindableInput GetMoveBindingsKb(Keyboard kb)
+        private IBindableInput GetStickBindingsKb(Keyboard kb, PlayerBind negativeX, PlayerBind positiveX,
+            PlayerBind negativeY, PlayerBind positiveY)
         {
-            var moveLefts = new List<ButtonControl>();
-            var moveRights = new List<ButtonControl>();
-            var moveUps = new List<ButtonControl>();
-            var moveDowns = new List<ButtonControl>();
-            
-            foreach (string path in binds[PlayerBind.KB_MoveLeft])
+            var negativeXs = new List<IBindableInput>();
+            var positiveXs = new List<IBindableInput>();
+            var negativeYs = new List<IBindableInput>();
+            var positiveYs = new List<IBindableInput>();
+
+            foreach (string path in _binds[negativeX])
                 if (kb.TryGetChildControl(path) is ButtonControl c)
-                    moveLefts.Add(c);
-            foreach (string path in binds[PlayerBind.KB_MoveRight])
+                    negativeXs.Add(new BindableButton(c));
+            foreach (string path in _binds[positiveX])
                 if (kb.TryGetChildControl(path) is ButtonControl c)
-                    moveRights.Add(c);
-            foreach (string path in binds[PlayerBind.KB_MoveUp])
+                    positiveXs.Add(new BindableButton(c));
+            foreach (string path in _binds[negativeY])
                 if (kb.TryGetChildControl(path) is ButtonControl c)
-                    moveUps.Add(c);
-            foreach (string path in binds[PlayerBind.KB_MoveDown])
+                    negativeYs.Add(new BindableButton(c));
+            foreach (string path in _binds[positiveY])
                 if (kb.TryGetChildControl(path) is ButtonControl c)
-                    moveDowns.Add(c);
-            
-            if (moveLefts.Count > 0 && moveRights.Count > 0 && moveUps.Count > 0 && moveDowns.Count > 0)
-                return new BindableStick(moveLefts, moveRights, moveUps, moveDowns);
+                    positiveYs.Add(new BindableButton(c));
+
+            if (negativeXs.Count > 0 && positiveXs.Count > 0 && negativeYs.Count > 0 && positiveYs.Count > 0)
+                return new BindableStick(
+                    new StickEmulator(
+                        new AxisEmulator(positiveXs.ToArray(), negativeXs.ToArray()),
+                        new AxisEmulator(positiveYs.ToArray(), negativeYs.ToArray())));
+            return null;
         }
     }
 

@@ -2,10 +2,10 @@ using UnityEngine;
 
 namespace Controls.InputBinding
 {
-    // Interface to physical hardware that an action can be bind to
-    public interface IBindableInput : ICustomSerializable
+    public interface IBindableInput
     {
-        InputState GetState();
-        Vector2 GetAxisValue();
+        public InputState GetState();
+        public Vector2 GetAxisValue();
+        public void Dispose();
     }
 }

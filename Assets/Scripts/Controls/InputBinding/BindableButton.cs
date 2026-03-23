@@ -6,30 +6,23 @@ namespace Controls.InputBinding
 {
     public class BindableButton : IBindableInput
     {
-        private readonly ButtonControl[] _buttons;
+        private readonly ButtonControl _button;
 
-        public BindableButton(params ButtonControl[] buttons) => _buttons = buttons;
+        public BindableButton(ButtonControl button) => _button = button;
 
         public InputState GetState()
         {
-            var best = InputState.Idle;
-            foreach (var b in _buttons)
-            {
-                if (b == null) continue;
-                if (b.wasPressedThisFrame) return InputState.Pressed;
-                if (b.wasReleasedThisFrame) best = InputState.Released;
-                if (b.isPressed && best == InputState.Idle) best = InputState.Held;
-            }
-
-            return best;
+            if (_button == null) return InputState.Idle;
+            if (_button.wasPressedThisFrame) return InputState.Pressed;
+            if (_button.wasReleasedThisFrame) return InputState.Released;
+            if (_button.isPressed) return InputState.Held;
+            return InputState.Idle;
         }
 
         public Vector2 GetAxisValue() => Vector2.zero;
-        
-        public string Serialize()
+        public void Dispose()
         {
-            var paths = System.Array.ConvertAll(_buttons, b => b?.path ?? "");
-            return "ButtonBinding:" + string.Join(",", paths);
+            
         }
     }
 }

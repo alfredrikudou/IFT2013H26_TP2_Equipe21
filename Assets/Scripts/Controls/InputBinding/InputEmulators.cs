@@ -1,50 +1,45 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem.Controls;
 
-namespace Controls
+namespace Controls.InputBinding
 {
-    public class AxisEmulator : ICustomSerializable
+    public class AxisEmulator : IEmulator
     {
         private readonly float _sensitivity;
         private readonly float _gravity;
         private readonly float _deadZone;
-        private readonly MappableAction _plusAction;
-        private readonly MappableAction _minusAction;
-        private readonly InputManager _im;
+        private readonly IBindableInput[] _plusActions;
+        private readonly IBindableInput[] _minusActions;
         public float Value { get; private set; }
 
-        public string Serialize() => $"AxisEmulator:sensitivity={_sensitivity},gravity={_gravity}," +
-                                     $"deadzone={_deadZone},plusAction={_plusAction.ToString()}," +
-                                     $"minusAction={_minusAction.ToString()}";
-
-        public AxisEmulator(MappableAction plusAction, MappableAction minusAction, float sensitivity, float gravity, float deadZone)
+        public AxisEmulator(IBindableInput[] plusActions, IBindableInput[] minusActions, float sensitivity = 1f, float gravity = 1f, float deadZone = 0f)
         {
-            _plusAction = plusAction;
-            _minusAction = minusAction;
+            _plusActions = plusActions;
+            _minusActions = minusActions;
             _sensitivity = sensitivity;
             _gravity = gravity;
             _deadZone = deadZone;
             Value = 0;
-            _im = InputManager.Instance;
         }
 
         public void Tick()
         {
-            if (_im.GetActionDown(_plusAction))
+            if (_plusActions.Any(x => x.GetState() == InputState.Pressed ||  x.GetState() == InputState.Held))
             {
                 Value = Mathf.Min(Value + _sensitivity, 1f);
             }
-            else if (_im.GetActionDown(_minusAction))
+            else if (_minusActions.Any(x => x.GetState() == InputState.Pressed ||  x.GetState() == InputState.Held))
             {
                 Value = Mathf.Max(Value - _sensitivity, -1f);
             }
             else if (Value >= _deadZone)
             {
-                Value -= _gravity;
+                Value = Mathf.Max(Value - _gravity, 0f);
             }
             else if (Value <= -_deadZone)
             {
-                Value += _gravity;
+                Value = Mathf.Min(Value + _gravity, 0f);
             }
             else
             {
@@ -53,13 +48,12 @@ namespace Controls
         }
     }
     
-    public class StickEmulator : IStick
+    public class StickEmulator : IStick, IEmulator
     {
         private readonly AxisEmulator _xAxis;
         private readonly  AxisEmulator _yAxis;
         public Vector2 Value { get; private set; }
         public Vector2 ReadValue() => Value;
-        public string Serialize() => $"StickEmulator:xAxis={_xAxis.Serialize()},yAxis={_yAxis.Serialize()}";
 
         public StickEmulator(AxisEmulator xAxis, AxisEmulator yaxis)
         {
@@ -77,15 +71,19 @@ namespace Controls
         }
     }
 
+    public interface IEmulator
+    {
+        public void Tick();
+    }
+
     public class UnityStick : IStick
     {
         private readonly StickControl _stick;
         public UnityStick(StickControl stick) => _stick = stick;
         public Vector2 ReadValue() => _stick?.ReadValue() ?? Vector2.zero;
-        public string Serialize() => $"UnityStick:path={_stick?.path ?? ""}";
     }
 
-    public interface IStick : ICustomSerializable
+    public interface IStick
     {
         public Vector2 ReadValue();
     } 

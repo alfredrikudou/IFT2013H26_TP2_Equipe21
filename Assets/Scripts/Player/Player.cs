@@ -1,31 +1,39 @@
 using System;
 using System.Linq;
+using System.Net;
 using Controls;
 using Controls.Device;
+using Controls.InputBinding;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.tvOS;
 
 namespace Player
 {
     public class Player : MonoBehaviour
     {
-        DeviceSelector _deviceSelector;
-        
+        PlayerControlManager _pcm;
+
         void Start()
         {
-            _deviceSelector = new DeviceSelector("PlayerName");
-            var dm = DeviceManager.Instance;
-            dm.BindDevice(_deviceSelector, dm.GetAvailableDevices().First());
+            _pcm = new PlayerControlManager("PlayerName");
         }
 
         void Update()
         {
-            if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            if (_pcm.GetActionState(MappableAction.Shoot) == InputState.Pressed)
             {
-                var newdevice = DeviceManager.Instance.GetAvailableDevices().First();
-                // DeviceManager.Instance.UnbindDeviceByDevice(_deviceSelector.BoundDevice);
-                DeviceManager.Instance.BindDevice(_deviceSelector, newdevice);
-                Debug.Log(_deviceSelector.BoundDevice.path);
+            }
+            //Debug.Log(_pcm.GetActionValue(MappableAction.Move));
+
+            if (Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                _pcm.ListenForDeviceChange();
+            }
+
+            if (Keyboard.current.tKey.wasPressedThisFrame)
+            {
+                DeviceManager.Instance.test();
             }
         }
     }

@@ -7,7 +7,12 @@ namespace Controls.InputBinding
     {
         private readonly IStick _stick;
 
-        public BindableStick(IStick stick) => _stick = stick;
+        public BindableStick(IStick stick)
+        {
+            _stick = stick;
+            if (_stick is StickEmulator emulator)
+                InputEmulatorManager.Instance.Register(emulator);
+        }
 
         public InputState GetState()
         {
@@ -18,15 +23,11 @@ namespace Controls.InputBinding
         {
             return _stick.ReadValue();
         }
-        
-        public string Serialize()
+
+        public void Dispose()
         {
-            var parts = new string[_sticks.Length];
-            for (int i = 0; i < _sticks.Length; i++)
-            {
-                parts[i] = _sticks[i].Serialize();
-            }
-            return "StickBinding:" + string.Join(",", parts);
+            if (_stick is StickEmulator emulator)
+                InputEmulatorManager.Instance.Unregister(emulator);
         }
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Controls.Device;
 using Controls.InputBinding;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -77,13 +76,13 @@ namespace Controls
         }
         public Vector2 GetActionValue(MappableAction action)
         {
-            var best = Vector2.zero;
-            if (!_deviceBindings.TryGetValue(action, out var binding)) return best;
+            var sum = Vector2.zero;
+            if (!_deviceBindings.TryGetValue(action, out var binding)) return sum;
             foreach (var bind in _deviceBindings[action])
             {
-                if (bind.GetAxisValue().sqrMagnitude > best.sqrMagnitude) best = bind.GetAxisValue();
+                sum += bind.GetAxisValue();
             }
-            return best;
+            return sum;
         }
 
         public void ListenForDeviceChange()

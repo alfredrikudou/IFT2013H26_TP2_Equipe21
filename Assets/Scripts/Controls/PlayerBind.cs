@@ -1,4 +1,4 @@
-namespace Controls.InputBinding
+namespace Controls
 {
     public enum PlayerBind
     {

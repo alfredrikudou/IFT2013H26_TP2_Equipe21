@@ -25,19 +25,22 @@ namespace Controls.InputBinding
 
         public void Tick()
         {
-            if (_plusActions.Any(x => x.GetState() == InputState.Pressed ||  x.GetState() == InputState.Held))
+            var plusHeld = _plusActions.Any(x => x.GetState() == InputState.Pressed || x.GetState() == InputState.Held);
+            var minusHeld = _minusActions.Any(x => x.GetState() == InputState.Pressed || x.GetState() == InputState.Held);
+
+            if (plusHeld && !minusHeld)
             {
                 Value = Mathf.Min(Value + _sensitivity, 1f);
             }
-            else if (_minusActions.Any(x => x.GetState() == InputState.Pressed ||  x.GetState() == InputState.Held))
+            else if (minusHeld && !plusHeld)
             {
                 Value = Mathf.Max(Value - _sensitivity, -1f);
             }
-            else if (Value >= _deadZone)
+            else if (Value > _deadZone)
             {
                 Value = Mathf.Max(Value - _gravity, 0f);
             }
-            else if (Value <= -_deadZone)
+            else if (Value < -_deadZone)
             {
                 Value = Mathf.Min(Value + _gravity, 0f);
             }

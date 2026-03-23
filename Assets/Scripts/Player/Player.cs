@@ -1,12 +1,6 @@
-using System;
-using System.Linq;
-using System.Net;
 using Controls;
-using Controls.Device;
 using Controls.InputBinding;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.tvOS;
 
 namespace Player
 {
@@ -28,6 +22,7 @@ namespace Player
             {
                 Debug.Log($"{playerName} has shot");
             }
+            Debug.Log($"{playerName} move: {_pcm.GetActionValue(MappableAction.Move).ToString()}");
         }
     }
 }

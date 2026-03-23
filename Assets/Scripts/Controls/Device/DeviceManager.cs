@@ -10,8 +10,11 @@ namespace Controls.Device
     public class DeviceManager
     {
         private static DeviceManager _instance;
-        private Dictionary<InputDevice, HashSet<DeviceSelector>> MappedDevices { get; set; } = new();
-        public event Action<HashSet<DeviceSelector>> OnDeviceChangeProcessed; // impacted selectors
+        private static readonly Type[] SupportedDeviceTypes = { typeof(Keyboard), typeof(Gamepad) };
+        private Dictionary<InputDevice, HashSet<PlayerControlManager>> MappedDevices { get; set; } = new();
+        private Dictionary<InputDevice, HashSet<PlayerControlManager>> DisconnectedDevices { get; set; } = new();
+
+        public bool IsDeviceSupported(InputDevice device) => !SupportedDeviceTypes.Contains(device.GetType());
 
         private DeviceManager()
         {
@@ -34,55 +37,12 @@ namespace Controls.Device
                 return _instance;
             }
         }
-        
-        private void OnDeviceChange(InputDevice device, InputDeviceChange change)
-        {
-            if (!(device is Keyboard or Gamepad)) return;
-            Debug.LogWarning($"OnDeviceChange: {device.path} bound:{MappedDevices.ContainsKey(device)}");
-            if (!MappedDevices.TryGetValue(device, out var impactedSelectors))
-            {
-                return;
-            }
-
-            switch (change)
-            {
-                case InputDeviceChange.Removed:
-                    UnbindAllSelectorFromDevice(device);
-                    break;
-            }
-            OnDeviceChangeProcessed?.Invoke(impactedSelectors);
-        }
 
 
         public List<InputDevice> GetAllDevices() =>
             InputSystem.devices.Where(x => x is Keyboard or Gamepad).ToList();
         
         public bool IsDeviceBound(InputDevice device) => MappedDevices.ContainsKey(device);
-
-        public void UnbindSelectorToDevice(DeviceSelector selector, InputDevice device)
-        {
-            selector.UnBindDevice(device);
-            if (!MappedDevices.ContainsKey(device)) return;
-            if (!MappedDevices[device].Remove(selector)) return;
-            if (MappedDevices[device].Count == 0) MappedDevices.Remove(device);
-        }
-
-        public void UnbindAllSelectorFromDevice(InputDevice device)
-        {
-            if (!MappedDevices.ContainsKey(device)) return;
-            foreach (var selector in MappedDevices[device].ToArray())
-                UnbindSelectorToDevice(selector, device);
-        }
-
-        public void BindDevice(DeviceSelector ds, InputDevice device)
-        {
-            if (MappedDevices.ContainsKey(device))
-                MappedDevices[device].Add(ds);
-            else
-                MappedDevices[device] = new HashSet<DeviceSelector>() { ds };
-            ds.BindDevice(device);
-            Debug.Log($"BindDevice: {device.path} bound:{MappedDevices.ContainsKey(device)}");
-        }
 
         public InputDevice GetFreeOrFirstDevice()
         {
@@ -96,30 +56,40 @@ namespace Controls.Device
 
         public void Register(PlayerControlManager control, InputDevice device)
         {
-            
+            if (!MappedDevices.TryAdd(device, new HashSet<PlayerControlManager>() { control }))
+                MappedDevices[device].Add(control);
         }
         
-        
-
-        public void ListenForDeviceChange(DeviceSelector deviceSelector)
+        public void Unregister(PlayerControlManager control, InputDevice device)
         {
-            InputSystem.onAnyButtonPress.CallOnce(DeviceChange);
-            void DeviceChange(InputControl control)
-            {
-                foreach (var deviceSelectorBoundDevice in deviceSelector.BoundDevices)
-                {
-                    UnbindSelectorToDevice(deviceSelector, deviceSelectorBoundDevice);
-                }
-                BindDevice(deviceSelector, control.device);
-                OnDeviceChangeProcessed?.Invoke(new HashSet<DeviceSelector>(){deviceSelector});
-            }
+            if (!MappedDevices.ContainsKey(device)) return;
+            if (!MappedDevices[device].Remove(control)) return;
+            if (MappedDevices[device].Count == 0) MappedDevices.Remove(device);
         }
-
-        public void test()
+        
+        private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            foreach (var mappedDevice in MappedDevices)
+            switch (change)
             {
-                Debug.Log(mappedDevice.Key.path);
+                case InputDeviceChange.Disconnected:
+                case InputDeviceChange.Removed:
+                    if(!MappedDevices.ContainsKey(device)) return;
+                    DisconnectedDevices[device] = new HashSet<PlayerControlManager>(MappedDevices[device]);
+                    foreach (var controlManager in MappedDevices[device].ToArray())
+                    {
+                        controlManager.RemoveDevice(device);
+                        Unregister(controlManager, device);
+                    }
+                    break;
+                case InputDeviceChange.Reconnected:
+                    if(!DisconnectedDevices.ContainsKey(device)) return;
+                    foreach (var controlManager in DisconnectedDevices[device])
+                    {
+                        Register(controlManager, device);
+                        controlManager.AddDevice(device);
+                    }
+                    DisconnectedDevices.Remove(device);
+                    break;
             }
         }
 

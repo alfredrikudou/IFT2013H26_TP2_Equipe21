@@ -12,28 +12,21 @@ namespace Player
 {
     public class Player : MonoBehaviour
     {
+        private static int playerCount = 0;
+        private string playerName = "";
         PlayerControlManager _pcm;
 
         void Start()
         {
-            _pcm = new PlayerControlManager("PlayerName");
+            _pcm = new PlayerControlManager();
+            playerName = $"Player{playerCount++}";
         }
 
         void Update()
         {
             if (_pcm.GetActionState(MappableAction.Shoot) == InputState.Pressed)
             {
-            }
-            //Debug.Log(_pcm.GetActionValue(MappableAction.Move));
-
-            if (Keyboard.current.escapeKey.wasPressedThisFrame)
-            {
-                _pcm.ListenForDeviceChange();
-            }
-
-            if (Keyboard.current.tKey.wasPressedThisFrame)
-            {
-                DeviceManager.Instance.test();
+                Debug.Log($"{playerName} has shot");
             }
         }
     }

@@ -4,6 +4,7 @@ using Controls.Device;
 using Controls.InputBinding;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Utilities;
 
 namespace Controls
 {
@@ -22,16 +23,14 @@ namespace Controls
                     bind.Dispose();
                 }
             }
-            DeviceManager.Instance.OnDeviceChangeProcessed -= OnDeviceChange;
         }
-        public PlayerControlManager(string playerName)
+        public PlayerControlManager()
         {
             
             SetupDefaultDevice();
             _keybinds = new InputBinder();
             _deviceBindings = new Dictionary<MappableAction, IBindableInput[]>();
             UpdateKeybinds();
-            DeviceManager.Instance.OnDeviceChangeProcessed += OnDeviceChange;
         }
 
         private void SetupDefaultDevice()
@@ -45,12 +44,6 @@ namespace Controls
                 DeviceManager.Instance.Register(this, freeOrFirst);
             }
         }
-        
-        private void OnDeviceChange(HashSet<DeviceSelector> impactedSelectors)
-        {
-            if (!impactedSelectors.Contains(_deviceSelector)) return;
-            UpdateKeybinds();
-        }
 
         private void UpdateKeybinds()
         {
@@ -63,7 +56,7 @@ namespace Controls
                 }
             }
             _deviceBindings.Clear();
-            var newBinds = _keybinds.CreateDeviceBind(_deviceSelector.BoundDevices);
+            var newBinds = _keybinds.CreateDeviceBind(_boundDevices);
             foreach (var bind in newBinds)
             {
                 _deviceBindings[bind.Key] = bind.Value.ToArray();
@@ -95,7 +88,47 @@ namespace Controls
 
         public void ListenForDeviceChange()
         {
-            DeviceManager.Instance.ListenForDeviceChange(_deviceSelector);
+            InputSystem.onAnyButtonPress.CallOnce(DeviceChange);
+        }
+        private void DeviceChange(InputControl control)
+        {
+            if (!DeviceManager.Instance.IsDeviceSupported(control.device))
+            {
+                InputSystem.onAnyButtonPress.CallOnce(DeviceChange);
+                return;
+            }
+            if (Array.IndexOf(_boundDevices, control.device) == -1)
+            {
+                foreach (var boundDevice in _boundDevices)
+                {
+                    DeviceManager.Instance.Unregister(this,  boundDevice);
+                }
+                _boundDevices = Array.Empty<InputDevice>();
+                DeviceManager.Instance.Register(this, control.device);
+                AddDevice(control.device);
+            }
+        }
+
+        public void RemoveDevice(InputDevice device)
+        {
+            if (Array.IndexOf(_boundDevices, device) == -1) return; // Not there to begin with
+            var updatedDevices = new InputDevice[_boundDevices.Length - 1];
+            for (int i = 0, j = 0; i < _boundDevices.Length; i++)
+                if(_boundDevices[i] != device)
+                    updatedDevices[j++] = _boundDevices[i];
+            _boundDevices = updatedDevices;
+            UpdateKeybinds();
+        }
+        
+        public void AddDevice(InputDevice device)
+        {
+            if (Array.IndexOf(_boundDevices, device) != -1) return; // Already there
+            var updatedDevices = new InputDevice[_boundDevices.Length + 1];
+            for (int i = 0; i < _boundDevices.Length; i++)
+                updatedDevices[i] = _boundDevices[i];
+            updatedDevices[^1] = device;
+            _boundDevices = updatedDevices;
+            UpdateKeybinds();
         }
         
         

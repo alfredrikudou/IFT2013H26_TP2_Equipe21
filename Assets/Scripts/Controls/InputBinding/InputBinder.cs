@@ -8,59 +8,45 @@ namespace Controls.InputBinding
 {
     public class InputBinder
     {
-        private readonly Dictionary<PlayerBind, InputType> _bindTypes = new Dictionary<PlayerBind, InputType>
+        private readonly Dictionary<PlayerSettings.PlayerSetting, List<string>> _binds =
+            new Dictionary<PlayerSettings.PlayerSetting, List<string>>
+            {
+                { PlayerSettings.PlayerSetting.KB_MoveLeft, new List<string> { "a", "leftArrow" } },
+                { PlayerSettings.PlayerSetting.KB_MoveRight, new List<string> { "d", "rightArrow" } },
+                { PlayerSettings.PlayerSetting.KB_MoveUp, new List<string> { "w", "upArrow" } },
+                { PlayerSettings.PlayerSetting.KB_MoveDown, new List<string> { "s", "downArrow" } },
+                { PlayerSettings.PlayerSetting.KB_MoveSensitivity, new List<string> { "1" } },
+                { PlayerSettings.PlayerSetting.KB_MoveDeadZone, new List<string> { "0" } },
+                { PlayerSettings.PlayerSetting.KB_MoveGravity, new List<string> { "1" } },
+                { PlayerSettings.PlayerSetting.KB_MoveInverted, new List<string> { "0" } },
+                { PlayerSettings.PlayerSetting.GP_Move, new List<string> { "leftStick" } },
+                { PlayerSettings.PlayerSetting.GP_MoveInverted, new List<string> { "0" } },
+
+                { PlayerSettings.PlayerSetting.KB_AimLeft, new List<string> { "leftArrow" } },
+                { PlayerSettings.PlayerSetting.KB_AimRight, new List<string> { "rightArrow" } },
+                { PlayerSettings.PlayerSetting.KB_AimUp, new List<string> { "upArrow" } },
+                { PlayerSettings.PlayerSetting.KB_AimDown, new List<string> { "downArrow" } },
+                { PlayerSettings.PlayerSetting.KB_AimSensitivity, new List<string> { "1" } },
+                { PlayerSettings.PlayerSetting.KB_AimDeadZone, new List<string> { "0" } },
+                { PlayerSettings.PlayerSetting.KB_AimGravity, new List<string> { "1" } },
+                { PlayerSettings.PlayerSetting.KB_AimInverted, new List<string> { "0" } },
+                { PlayerSettings.PlayerSetting.GP_Aim, new List<string> { "rightStick" } },
+                { PlayerSettings.PlayerSetting.GP_AimInverted, new List<string> { "0" } },
+
+                { PlayerSettings.PlayerSetting.KB_Shoot, new List<string> { "space" } },
+                { PlayerSettings.PlayerSetting.GP_Shoot, new List<string> { "rightTrigger", "buttonSouth" } },
+
+                { PlayerSettings.PlayerSetting.KB_Pause, new List<string> { "escape" } },
+                { PlayerSettings.PlayerSetting.GP_Pause, new List<string> { "start" } },
+            };
+
+        public void ChangeBind(PlayerSettings.PlayerSetting bind, List<string> values)
         {
-            { PlayerBind.KB_MoveLeft, InputType.Button },
-            { PlayerBind.KB_MoveRight, InputType.Button },
-            { PlayerBind.KB_MoveUp, InputType.Button },
-            { PlayerBind.KB_MoveDown, InputType.Button },
-            { PlayerBind.GP_Move, InputType.Stick },
-
-            { PlayerBind.KB_AimLeft, InputType.Button },
-            { PlayerBind.KB_AimRight, InputType.Button },
-            { PlayerBind.KB_AimUp, InputType.Button },
-            { PlayerBind.KB_AimDown, InputType.Button },
-            { PlayerBind.GP_Aim, InputType.Stick },
-
-            { PlayerBind.KB_Shoot, InputType.Button },
-            { PlayerBind.GP_Shoot, InputType.Button },
-
-            { PlayerBind.KB_Pause, InputType.Button },
-            { PlayerBind.GP_Pause, InputType.Button },
-        };
-
-        private readonly Dictionary<PlayerBind, List<string>> _binds = new Dictionary<PlayerBind, List<string>>
-        {
-            { PlayerBind.KB_MoveLeft,  new List<string> { "a", "leftArrow" } },
-            { PlayerBind.KB_MoveRight, new List<string> { "d", "rightArrow" } },
-            { PlayerBind.KB_MoveUp,    new List<string> { "w", "upArrow" } },
-            { PlayerBind.KB_MoveDown,  new List<string> { "s", "downArrow" } },
-            { PlayerBind.GP_Move,      new List<string> { "leftStick" } },
-
-            { PlayerBind.KB_AimLeft,   new List<string> { "leftArrow" } },
-            { PlayerBind.KB_AimRight,  new List<string> { "rightArrow" } },
-            { PlayerBind.KB_AimUp,     new List<string> { "upArrow" } },
-            { PlayerBind.KB_AimDown,   new List<string> { "downArrow" } },
-            { PlayerBind.GP_Aim,       new List<string> { "rightStick" } },
-
-            { PlayerBind.KB_Shoot,     new List<string> { "space" } },
-            { PlayerBind.GP_Shoot,     new List<string> { "rightTrigger", "buttonSouth" } },
-
-            { PlayerBind.KB_Pause,     new List<string> { "escape" } },
-            { PlayerBind.GP_Pause,     new List<string> { "start" } },
-        };
-
-        public void ChangeBind(PlayerBind bind, List<string> values)
-        {
-            InputType expectedType = _bindTypes[bind];
-
             foreach (string value in values)
             {
-                InputType valueType = value.Contains("Stick") ? InputType.Stick : InputType.Button;
-
-                if (valueType != expectedType)
+                if (!PlayerSettings.IsValidBindForAction(bind, value))
                 {
-                    Debug.LogWarning($"Bind {bind} expects {expectedType} but got {valueType} for path {value}");
+                    Debug.LogWarning(PlayerSettings.GetValidBindComparison(bind, value));
                     return;
                 }
             }
@@ -75,7 +61,7 @@ namespace Controls.InputBinding
             void AppendOrCreate(MappableAction action, IBindableInput input)
             {
                 if (!devicesMap.ContainsKey(action))
-                    devicesMap[action] = new List<IBindableInput>{input};
+                    devicesMap[action] = new List<IBindableInput> { input };
                 else
                     devicesMap[action].Add(input);
             }
@@ -85,46 +71,66 @@ namespace Controls.InputBinding
                 if (inputDevice is Keyboard keyboard)
                 {
                     // Move
-                    var moveStick = GetStickBindingsKb(keyboard, PlayerBind.KB_MoveLeft, PlayerBind.KB_MoveRight,
-                        PlayerBind.KB_MoveDown, PlayerBind.KB_MoveUp);
-                    if(moveStick != null)
+                    var moveStick = GetStickBindingsKb(keyboard, PlayerSettings.PlayerSetting.KB_MoveLeft,
+                        PlayerSettings.PlayerSetting.KB_MoveRight,
+                        PlayerSettings.PlayerSetting.KB_MoveDown, PlayerSettings.PlayerSetting.KB_MoveUp,
+                        PlayerSettings.PlayerSetting.KB_MoveSensitivity,
+                        PlayerSettings.PlayerSetting.KB_MoveGravity,
+                        PlayerSettings.PlayerSetting.KB_MoveDeadZone,
+                        PlayerSettings.PlayerSetting.KB_MoveInverted);
+                    if (moveStick != null)
                         AppendOrCreate(MappableAction.Move, moveStick);
 
                     // Aim
-                    var aimStick = GetStickBindingsKb(keyboard, PlayerBind.KB_AimLeft, PlayerBind.KB_AimRight,
-                        PlayerBind.KB_AimDown, PlayerBind.KB_AimUp);
-                    if(aimStick != null)
+                    var aimStick = GetStickBindingsKb(keyboard, PlayerSettings.PlayerSetting.KB_AimLeft,
+                        PlayerSettings.PlayerSetting.KB_AimRight,
+                        PlayerSettings.PlayerSetting.KB_AimDown, PlayerSettings.PlayerSetting.KB_AimUp,
+                        PlayerSettings.PlayerSetting.KB_AimSensitivity,
+                        PlayerSettings.PlayerSetting.KB_AimGravity,
+                        PlayerSettings.PlayerSetting.KB_AimDeadZone,
+                        PlayerSettings.PlayerSetting.KB_AimInverted);
+                    if (aimStick != null)
                         AppendOrCreate(MappableAction.Aim, moveStick);
-                    
+
                     // Shoot
-                    foreach (string path in _binds[PlayerBind.KB_Shoot])
+                    foreach (string path in _binds[PlayerSettings.PlayerSetting.KB_Shoot])
                         if (keyboard.TryGetChildControl(path) is ButtonControl c)
                             AppendOrCreate(MappableAction.Shoot, new BindableButton(c));
-                    
+
                     // Pause
-                    foreach (string path in _binds[PlayerBind.KB_Pause])
+                    foreach (string path in _binds[PlayerSettings.PlayerSetting.KB_Pause])
                         if (keyboard.TryGetChildControl(path) is ButtonControl c)
                             AppendOrCreate(MappableAction.Pause, new BindableButton(c));
                 }
                 else if (inputDevice is Gamepad gamepad)
                 {
                     // Move
-                    foreach (string path in _binds[PlayerBind.GP_Move])
+                    foreach (string path in _binds[PlayerSettings.PlayerSetting.GP_Move])
                         if (gamepad.TryGetChildControl(path) is StickControl c)
-                            AppendOrCreate(MappableAction.Move, new BindableStick(new UnityStick(c)));
+                        {
+                            bool invert =
+                                _binds.TryGetValue(PlayerSettings.PlayerSetting.GP_MoveInverted, out var invertList) &&
+                                float.TryParse(invertList.First(), out float resultInvert) && resultInvert != 0f;
+                            AppendOrCreate(MappableAction.Move, new BindableStick(new UnityStick(c, invert)));
+                        }
 
                     // Aim
-                    foreach (string path in _binds[PlayerBind.GP_Aim])
+                    foreach (string path in _binds[PlayerSettings.PlayerSetting.GP_Aim])
                         if (gamepad.TryGetChildControl(path) is StickControl c)
-                            AppendOrCreate(MappableAction.Aim, new BindableStick(new UnityStick(c)));
+                        {
+                            bool invert =
+                                _binds.TryGetValue(PlayerSettings.PlayerSetting.GP_AimInverted, out var invertList) &&
+                                float.TryParse(invertList.First(), out float resultInvert) && resultInvert != 0f;
+                            AppendOrCreate(MappableAction.Aim, new BindableStick(new UnityStick(c, invert)));
+                        }
 
                     // Shoot
-                    foreach (string path in _binds[PlayerBind.GP_Shoot])
+                    foreach (string path in _binds[PlayerSettings.PlayerSetting.GP_Shoot])
                         if (gamepad.TryGetChildControl(path) is ButtonControl c)
                             AppendOrCreate(MappableAction.Shoot, new BindableButton(c));
 
                     // Pause
-                    foreach (string path in _binds[PlayerBind.GP_Pause])
+                    foreach (string path in _binds[PlayerSettings.PlayerSetting.GP_Pause])
                         if (gamepad.TryGetChildControl(path) is ButtonControl c)
                             AppendOrCreate(MappableAction.Pause, new BindableButton(c));
                 }
@@ -133,13 +139,33 @@ namespace Controls.InputBinding
             return devicesMap;
         }
 
-        private IBindableInput GetStickBindingsKb(Keyboard kb, PlayerBind negativeX, PlayerBind positiveX,
-            PlayerBind negativeY, PlayerBind positiveY)
+        private IBindableInput GetStickBindingsKb(Keyboard kb, PlayerSettings.PlayerSetting negativeX,
+            PlayerSettings.PlayerSetting positiveX,
+            PlayerSettings.PlayerSetting negativeY, PlayerSettings.PlayerSetting positiveY,
+            PlayerSettings.PlayerSetting sensitivity,
+            PlayerSettings.PlayerSetting gravity, PlayerSettings.PlayerSetting deadZone,
+            PlayerSettings.PlayerSetting isInverted)
         {
             var negativeXs = new List<IBindableInput>();
             var positiveXs = new List<IBindableInput>();
             var negativeYs = new List<IBindableInput>();
             var positiveYs = new List<IBindableInput>();
+            float sens =
+                _binds.TryGetValue(sensitivity, out var sensList) &&
+                float.TryParse(sensList.First(), out float resultSens)
+                    ? resultSens
+                    : 1f;
+            float grav =
+                _binds.TryGetValue(gravity, out var gravList) && float.TryParse(gravList.First(), out float resultGrav)
+                    ? resultGrav
+                    : 1f;
+            float dead =
+                _binds.TryGetValue(deadZone, out var deadList) && float.TryParse(deadList.First(), out float resultDead)
+                    ? resultDead
+                    : 0f;
+            bool invert = _binds.TryGetValue(isInverted, out var invertList) &&
+                          float.TryParse(invertList.First(), out float resultInvert) && resultInvert != 0f;
+
 
             foreach (string path in _binds[negativeX])
                 if (kb.TryGetChildControl(path) is ButtonControl c)
@@ -157,15 +183,30 @@ namespace Controls.InputBinding
             if (negativeXs.Count > 0 && positiveXs.Count > 0 && negativeYs.Count > 0 && positiveYs.Count > 0)
                 return new BindableStick(
                     new StickEmulator(
-                        new AxisEmulator(positiveXs.ToArray(), negativeXs.ToArray()),
-                        new AxisEmulator(positiveYs.ToArray(), negativeYs.ToArray())));
+                        new AxisEmulator(positiveXs.ToArray(), negativeXs.ToArray(), sens, grav, dead),
+                        new AxisEmulator(positiveYs.ToArray(), negativeYs.ToArray(), sens, grav, dead),
+                        invert));
             return null;
         }
-    }
 
-    internal enum InputType
-    {
-        Button,
-        Stick
+        public string Serialize()
+        {
+            return string.Join(";", _binds.Select(kvp =>
+                $"{kvp.Key}:{string.Join(",", kvp.Value)}"
+            ));
+        }
+
+        public void Deserialize(string data)
+        {
+            _binds.Clear();
+            foreach (string entry in data.Split(';'))
+            {
+                string[] parts = entry.Split(':');
+                PlayerSettings.PlayerSetting bind = System.Enum.Parse<PlayerSettings.PlayerSetting>(parts[0]);
+                ChangeBind(bind, parts[1].Split(',').ToList());
+            }
+        }
+
+        public void UpdateBind(string newBinds) => Deserialize(newBinds);
     }
 }

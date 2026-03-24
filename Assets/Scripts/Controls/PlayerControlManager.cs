@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Controls.InputBinding;
+using Player;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
@@ -46,7 +49,6 @@ namespace Controls
 
         private void UpdateKeybinds()
         {
-            Debug.LogWarning("Updating keybinds");
             foreach (var kvp in _deviceBindings)
             {
                 foreach (var bind in kvp.Value)
@@ -108,7 +110,7 @@ namespace Controls
             }
         }
 
-        public void RemoveDevice(InputDevice device)
+        public void RemoveDevice(InputDevice device, bool updateKeybinds = true)
         {
             if (Array.IndexOf(_boundDevices, device) == -1) return; // Not there to begin with
             var updatedDevices = new InputDevice[_boundDevices.Length - 1];
@@ -116,10 +118,10 @@ namespace Controls
                 if(_boundDevices[i] != device)
                     updatedDevices[j++] = _boundDevices[i];
             _boundDevices = updatedDevices;
-            UpdateKeybinds();
+            if(updateKeybinds) UpdateKeybinds();
         }
         
-        public void AddDevice(InputDevice device)
+        public void AddDevice(InputDevice device, bool updateKeybinds = true)
         {
             if (Array.IndexOf(_boundDevices, device) != -1) return; // Already there
             var updatedDevices = new InputDevice[_boundDevices.Length + 1];
@@ -127,9 +129,41 @@ namespace Controls
                 updatedDevices[i] = _boundDevices[i];
             updatedDevices[^1] = device;
             _boundDevices = updatedDevices;
-            UpdateKeybinds();
+            if(updateKeybinds) UpdateKeybinds();
         }
-        
-        
+
+        public string GetBindMapSerialize() => _keybinds.Serialize();
+        public string[] GetDevicesSerialize() => 
+            System.Array.ConvertAll(_boundDevices, d => 
+                d.displayName + ":" + d.deviceId
+                );
+
+        public void UpdateControl(PlayerControlDTO dto)
+        {
+            foreach (var boundDevice in _boundDevices.ToArray())
+            {
+                DeviceManager.Instance.Unregister(this, boundDevice);
+                RemoveDevice(boundDevice, false);
+            }
+            var allDevices = DeviceManager.Instance.GetAllDevices();
+            foreach (var dtoDevice in dto.Devices)
+            {
+                var device = dtoDevice.Split(':');
+                foreach (var inputDevice in allDevices)
+                {
+                    if (device[0] == inputDevice.displayName && device[1] == inputDevice.deviceId.ToString())
+                    {
+                        DeviceManager.Instance.Register(this, inputDevice);
+                        AddDevice(inputDevice, false);
+                    }
+                }
+
+            }
+            _keybinds.UpdateBind(dto.BindMap);
+
+            UpdateKeybinds();
+
+        }
+            
     }
 }

@@ -55,13 +55,15 @@ namespace Controls.InputBinding
     {
         private readonly AxisEmulator _xAxis;
         private readonly  AxisEmulator _yAxis;
+        private readonly bool _isInverted;
         public Vector2 Value { get; private set; }
-        public Vector2 ReadValue() => Value;
+        public Vector2 ReadValue() => _isInverted ? Value * -1f : Value;
 
-        public StickEmulator(AxisEmulator xAxis, AxisEmulator yaxis)
+        public StickEmulator(AxisEmulator xAxis, AxisEmulator yaxis, bool isInverted = false)
         {
             _xAxis = xAxis;
             _yAxis = yaxis;
+            _isInverted = isInverted;
             Value = new Vector2(0f, 0f);
         }
 
@@ -82,8 +84,17 @@ namespace Controls.InputBinding
     public class UnityStick : IStick
     {
         private readonly StickControl _stick;
-        public UnityStick(StickControl stick) => _stick = stick;
-        public Vector2 ReadValue() => _stick?.ReadValue() ?? Vector2.zero;
+        private readonly bool _isInverted;
+        public UnityStick(StickControl stick, bool isInverted = false) {
+            _stick = stick;
+            _isInverted = isInverted;
+        }
+
+        public Vector2 ReadValue()
+        {
+            Vector2 value = _stick?.ReadValue() ?? Vector2.zero;
+            return _isInverted ? -value : value;
+        }
     }
 
     public interface IStick

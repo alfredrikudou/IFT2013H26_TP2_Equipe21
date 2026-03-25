@@ -12,7 +12,7 @@ namespace Controls
         private Dictionary<InputDevice, HashSet<PlayerControlManager>> MappedDevices { get; set; } = new();
         private Dictionary<InputDevice, HashSet<PlayerControlManager>> DisconnectedDevices { get; set; } = new();
 
-        public bool IsDeviceSupported(InputDevice device) => !SupportedDeviceTypes.Contains(device.GetType());
+        public bool IsDeviceSupported(InputDevice device) => SupportedDeviceTypes.Contains(device.GetType());
 
         private DeviceManager()
         {

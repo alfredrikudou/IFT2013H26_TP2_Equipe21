@@ -154,7 +154,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 84
+  m_Constraints: 116
   m_CollisionDetection: 0
 --- !u!65 &8086810951694614205
 BoxCollider:
@@ -189,6 +189,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0703327f625bfe4daf6adb050b63d76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player.Player
+  _isComputerControlled: 0
   moveSpeed: 5
   _cannon: {fileID: 9158435043672577768}
   _aimSpeed: 90
@@ -204,6 +205,13 @@ MonoBehaviour:
   _explosionRadius: 3
   _explosionMaxDamage: 40
   _explosionDamagesShooter: 1
+  _aiAimToleranceDegrees: 10
+  _aiMaxAimSeconds: 4
+  _aiChargeMin: 0.72
+  _aiChargeMax: 1
+  _aiComfortShotRange: 14
+  _aiAlwaysMoveIfFartherThan: 2.5
+  _aiStrafeAmplitude: 0.35
   _powerSlider: {fileID: 0}
   _sliderOffset: {x: 0, y: -0.6, z: 0}
 --- !u!114 &9142070157792044009

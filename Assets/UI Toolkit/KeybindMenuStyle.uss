@@ -1,0 +1,23 @@
+:root {
+}
+
+.Container {
+}
+
+.key-button {
+}
+
+.keybind-row {
+    flex-direction: row;
+    flex-wrap: wrap-reverse;
+}
+
+.action-label {
+    color: rgb(255, 255, 255);
+}
+
+.device-container {
+    white-space: normal;
+    flex-direction: row;
+    flex-wrap: wrap-reverse;
+}

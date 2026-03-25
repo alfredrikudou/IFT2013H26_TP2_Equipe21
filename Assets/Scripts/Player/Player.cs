@@ -1,34 +1,53 @@
+using System;
 using Controls;
+using Controls.InputBinding;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Player
 {
-    public class Player : MonoBehaviour, IDeviceSelector
+    public class Player : MonoBehaviour
     {
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        private static int _playerCount = 0;
+        private string _playerName = "";
+        private PlayerControlManager _pcm;
+
+        [Header("Movement")] [SerializeField] private float moveSpeed = 5f;
+ 
+        private Rigidbody _rb;
+        private Vector2 _moveInput = Vector2.zero;
+        
+        public string GetName() => _playerName;
+
+        public void UpdateControl(PlayerControlDTO dto) => _pcm.UpdateControl(dto);
+
+        public PlayerControlDTO GetProfileDTO()
+        {
+            return new PlayerControlDTO{
+                Name = _playerName,
+                BindMap = _pcm.GetBindMapSerialize(),
+                Devices = _pcm.GetDevicesSerialize()
+            };
+        }
+        
+        private void Awake()
+        {
+            _rb = GetComponent<Rigidbody>();
+        }
+
         void Start()
         {
-        
+            _pcm = new PlayerControlManager();
+            _playerName = $"Player{_playerCount++}";
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Update()
         {
-        
+            _moveInput = _pcm.GetActionValue(MappableAction.Move);
         }
 
-        public void BindDevice(InputDevice device)
+        private void FixedUpdate()
         {
-        }
-
-        public void UnBindDevice()
-        {
-        }
-
-        public string GetSelectorName()
-        {
-            return "Player";
+            _rb.linearVelocity = new Vector3(_moveInput.x * moveSpeed, _rb.linearVelocity.y, _moveInput.y * moveSpeed);
         }
     }
 }

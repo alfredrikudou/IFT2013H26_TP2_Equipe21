@@ -72,6 +72,25 @@ namespace Player
         public string GetName() => _playerName;
         public bool IsComputerControlled => _isComputerControlled;
 
+        public void SetComputerControlled(bool computerControlled)
+        {
+            _isComputerControlled = computerControlled;
+        }
+
+        private int _slotIndex = -1;
+        public int SlotIndex => _slotIndex;
+
+        public void SetSlotIndex(int index)
+        {
+            _slotIndex = index;
+        }
+
+        public void SetPlayerName(string playerName)
+        {
+            if (string.IsNullOrWhiteSpace(playerName)) return;
+            _playerName = playerName.Trim();
+        }
+
         /// <summary>Appelé avant instanciation des joueurs (ex. spawn TurnManager) pour repartir à Player0.</summary>
         public static void ResetStaticPlayerNaming()
         {
@@ -163,6 +182,18 @@ namespace Player
 
         private void Update()
         {
+            if (TurnManager.Instance != null && TurnManager.Instance.IsMatchOver)
+            {
+                _moveInput = Vector2.zero;
+                return;
+            }
+
+            if (GamePauseState.IsPaused)
+            {
+                _moveInput = Vector2.zero;
+                return;
+            }
+
             if (!_isMyTurn || (TurnManager.Instance != null && TurnManager.Instance.IsWaitingForProjectile()))
             {
                 _moveInput = Vector2.zero;
@@ -327,6 +358,18 @@ namespace Player
 
         private void FixedUpdate()
         {
+            if (GamePauseState.IsPaused)
+            {
+                _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+                return;
+            }
+
+            if (TurnManager.Instance != null && TurnManager.Instance.IsMatchOver)
+            {
+                _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+                return;
+            }
+
             bool blocked = !_isMyTurn || (TurnManager.Instance != null && TurnManager.Instance.IsWaitingForProjectile());
             if (blocked)
             {

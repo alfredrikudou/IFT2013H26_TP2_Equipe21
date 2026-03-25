@@ -1,0 +1,75 @@
+.pause-panel {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background-color: rgba(0, 0, 0, 0.65);
+    align-items: center;
+    justify-content: center;
+}
+
+.pause-dialog {
+    min-width: 520px;
+    max-width: 90%;
+    padding: 22px 28px 28px 28px;
+    background-color: rgba(40, 40, 55, 0.95);
+    border-radius: 12px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.pause-title {
+    -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
+    font-size: 54px;
+    color: rgb(255, 255, 255);
+    text-shadow: 3px 3px 0 rgb(0, 0, 0);
+    margin-bottom: 14px;
+}
+
+.pause-players {
+    margin-bottom: 18px;
+    padding: 10px 12px;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+}
+
+.pause-player-line {
+    -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
+    font-size: 24px;
+    color: rgb(230, 230, 230);
+    margin-top: 6px;
+    margin-bottom: 6px;
+    white-space: normal;
+}
+
+.pause-player-line.dead {
+    color: rgb(180, 180, 180);
+}
+
+.pause-buttons {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pause-button {
+    -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
+    font-size: 32px;
+    color: rgb(255, 255, 255);
+    text-shadow: 2px 2px 0 rgb(0, 0, 0);
+    background-color: rgba(255, 255, 255, 0.12);
+    border-width: 0px;
+    border-radius: 8px;
+    padding-left: 18px;
+    padding-right: 18px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    min-width: 200px;
+}
+
+.pause-button:hover {
+    scale: 1.05 1.05;
+}
+

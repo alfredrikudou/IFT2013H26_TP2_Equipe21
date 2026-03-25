@@ -102,7 +102,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7051851240463705202, guid: 68d2a5c8df7bc0c45867323bf14278f0, type: 3}
       propertyPath: _aiComfortShotRange
-      value: 5
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7051851240463705202, guid: 68d2a5c8df7bc0c45867323bf14278f0, type: 3}
       propertyPath: _isComputerControlled

@@ -1,5 +1,5 @@
 .menuRegularButton {
-    -unity-font-definition: url("project://database/Assets/WormsUI/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
+    -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
     font-size: 41px;
     color: rgb(255, 255, 255);
     text-shadow: 2px 2px 0 rgb(0, 0, 0);
@@ -21,4 +21,154 @@
 
 .menuRegularButton:hover {
     scale: 1.05 1.05;
+}
+
+.menu-headline {
+    -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
+    font-size: 55px;
+    color: rgb(255, 255, 255);
+    text-shadow: 2px 2px 0 rgb(0, 0, 0);
+    margin-top: 120px;
+    margin-bottom: 16px;
+}
+
+.center-column {
+    width: 100%;
+}
+
+.overlay-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(20, 20, 30, 0.82);
+    align-items: center;
+    justify-content: center;
+}
+
+.dialog-box {
+    min-width: 520px;
+    max-width: 90%;
+    padding: 24px 32px 32px 32px;
+    background-color: rgba(40, 40, 55, 0.95);
+    border-radius: 12px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.menu-title-small {
+    -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
+    font-size: 44px;
+    color: rgb(255, 255, 255);
+    text-shadow: 3px 3px 0 rgb(0, 0, 0);
+    margin-bottom: 20px;
+    -unity-text-align: middle-center;
+}
+
+.menu-dropdown {
+    margin-bottom: 16px;
+    min-width: 280px;
+    color: rgb(255, 255, 255);
+}
+
+.menu-dropdown .unity-base-field__input,
+.menu-dropdown .unity-text-input__input,
+.menu-dropdown TextInput,
+.menu-dropdown TextField {
+    color: rgb(255, 255, 255);
+}
+
+.setup-row {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    min-width: 420px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.setup-row-top {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.setup-label {
+    font-size: 22px;
+    color: rgb(230, 230, 230);
+    min-width: 120px;
+}
+
+.setup-toggle {
+    font-size: 20px;
+    color: rgb(255, 220, 180);
+}
+
+.setup-name-field {
+    margin: 0px;
+    padding: 0px;
+    height: auto;
+    min-height: 26px;
+    width: 220px;
+    font-size: 22px;
+    color: rgb(230, 230, 230);
+    background-color: transparent;
+    border-radius: 0px;
+    border-width: 0px;
+}
+
+.setup-name-field .unity-text-input__input {
+    background-color: transparent;
+    color: rgb(230, 230, 230);
+    padding: 0px;
+    margin: 0px;
+    font-size: 22px;
+}
+
+.setup-name-field .unity-base-field__input,
+.setup-name-field .unity-text-input__input {
+    background-color: transparent;
+    border-width: 0px;
+    box-shadow: none;
+}
+
+.setup-name-field .unity-base-field__outline {
+    border-width: 0px;
+}
+
+.setup-name-field:focus-within {
+    border-width: 0px;
+}
+
+.setup-name-field .unity-text-input__placeholder {
+    color: rgba(230, 230, 230, 0.55);
+}
+
+.setup-buttons-row {
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.menu-button-small {
+    width: 220px;
+    height: 72px;
+    font-size: 28px;
+    margin: 8px;
+}
+
+.credits-box {
+    min-width: 480px;
+}
+
+.credits-text {
+    font-size: 22px;
+    color: rgb(220, 220, 230);
+    white-space: normal;
+    margin-top: 12px;
+    margin-bottom: 20px;
+    -unity-text-align: upper-left;
 }

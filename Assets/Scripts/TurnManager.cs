@@ -32,9 +32,17 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private Color activeColor = Color.white;
     [SerializeField] private Color waitingProjectileColor = new Color(1f, 0.7f, 0.3f);
 
+    [Header("Fin de partie")]
+    [SerializeField] private string winnerFormat = "{0} remporte la partie !";
+    [SerializeField] private Color winnerColor = new Color(0.4f, 1f, 0.5f);
+    [SerializeField] private string tieMessage = "Partie terminée — plus aucun survivant";
+
     private readonly List<Player.Player> _players = new();
     private int _currentIndex = 0;
     private bool _waitingForProjectile = false;
+    private bool _matchOver;
+
+    public bool IsMatchOver => _matchOver;
 
     private void Awake()
     {
@@ -48,10 +56,12 @@ public class TurnManager : MonoBehaviour
 
     private void Start()
     {
+        _matchOver = false;
         if (spawnPlayersAtStart)
             SpawnPlayersFromConfig();
 
         RefreshPlayers();
+        GameSessionConfig.ApplyComputerFlagsToSpawnedPlayers(_players);
         BeginTurn(FindFirstAliveIndex(0));
     }
 
@@ -65,7 +75,7 @@ public class TurnManager : MonoBehaviour
     /// <summary>Retire les joueurs de la scène et instancie les variantes aux spawn points (noms Player0…).</summary>
     private void SpawnPlayersFromConfig()
     {
-        int n = Mathf.Clamp(numberOfPlayers, MinPlayers, MaxPlayers);
+        int n = Mathf.Clamp(GameSessionConfig.GetEffectivePlayerCount(numberOfPlayers), MinPlayers, MaxPlayers);
 
         if (spawnPoints == null || spawnPoints.Length < n)
         {
@@ -113,7 +123,14 @@ public class TurnManager : MonoBehaviour
                 ? wormPrefabSlots[i]
                 : fallbackPrefab;
 
-            Instantiate(prefab, sp.position, sp.rotation);
+            var go = Instantiate(prefab, sp.position, sp.rotation);
+            var player = go != null ? go.GetComponent<Player.Player>() : null;
+            if (player != null)
+            {
+                player.SetSlotIndex(i);
+                if (GameSessionConfig.LoadedFromMenu)
+                    player.SetPlayerName(GameSessionConfig.GetPlayerNameForSlot(i));
+            }
         }
 
         foreach (var cam in FindObjectsOfType<CameraController>(false))
@@ -125,7 +142,13 @@ public class TurnManager : MonoBehaviour
         _players.Clear();
         // Ne pas inclure les joueurs désactivés : sinon le tour peut rester sur un GameObject inactif.
         _players.AddRange(FindObjectsOfType<Player.Player>(false));
-        _players.Sort((a, b) => string.CompareOrdinal(a.GetName(), b.GetName()));
+
+        // Si on a défini un slot index (via spawn), on garde l'ordre du rang (0..N-1).
+        bool anyHasSlot = _players.Any(p => p != null && p.SlotIndex >= 0);
+        if (anyHasSlot)
+            _players.Sort((a, b) => a.SlotIndex.CompareTo(b.SlotIndex));
+        else
+            _players.Sort((a, b) => string.CompareOrdinal(a.GetName(), b.GetName()));
     }
 
     private int FindFirstAliveIndex(int startIndex)
@@ -141,6 +164,8 @@ public class TurnManager : MonoBehaviour
 
     private void BeginTurn(int index)
     {
+        if (_matchOver) return;
+
         if (_players.Count == 0)
         {
             UpdateActivePlayerUI();
@@ -158,7 +183,7 @@ public class TurnManager : MonoBehaviour
 
     private void NextTurn()
     {
-        if (_players.Count == 0) return;
+        if (_matchOver || _players.Count == 0) return;
         int next = FindFirstAliveIndex(_currentIndex + 1);
         BeginTurn(next);
     }
@@ -167,6 +192,7 @@ public class TurnManager : MonoBehaviour
 
     public void NotifyShotFired(Projectile projectile)
     {
+        if (_matchOver) return;
         if (projectile == null) return;
         if (_waitingForProjectile) return;
         _waitingForProjectile = true;
@@ -176,46 +202,96 @@ public class TurnManager : MonoBehaviour
 
     public void OnPlayerHealthChanged(Player.Player player)
     {
-        if (player == null) return;
+        if (player == null || _matchOver) return;
+
         if (player.IsDead)
             player.SetTurnActive(false);
 
-        if (_players.Count > 0 && _players.TrueForAll(p => p.IsDead))
+        var alive = _players.Where(p => p != null && !p.IsDead).ToList();
+
+        if (alive.Count == 0)
         {
-            if (activePlayerLabel != null)
-            {
-                activePlayerLabel.color = activeColor;
-                activePlayerLabel.text = "Partie terminée";
-            }
+            EndMatchTie();
             return;
         }
 
-        if (!_waitingForProjectile && _players.Count > 0 && _currentIndex >= 0 && _currentIndex < _players.Count &&
+        if (alive.Count == 1)
+        {
+            EndMatchWinner(alive[0]);
+            return;
+        }
+
+        if (!_waitingForProjectile && _currentIndex >= 0 && _currentIndex < _players.Count &&
             _players[_currentIndex].IsDead)
             BeginTurn(FindFirstAliveIndex(_currentIndex + 1));
 
         UpdateActivePlayerUI();
     }
 
+    private void EndMatchWinner(Player.Player winner)
+    {
+        if (_matchOver || winner == null) return;
+        _matchOver = true;
+        _waitingForProjectile = false;
+        foreach (var p in _players)
+        {
+            if (p != null)
+                p.SetTurnActive(false);
+        }
+
+        StopAllCoroutines();
+
+        if (activePlayerLabel != null)
+        {
+            activePlayerLabel.color = winnerColor;
+            activePlayerLabel.text = string.Format(winnerFormat, winner.GetName());
+        }
+    }
+
+    private void EndMatchTie()
+    {
+        if (_matchOver) return;
+        _matchOver = true;
+        _waitingForProjectile = false;
+        foreach (var p in _players)
+        {
+            if (p != null)
+                p.SetTurnActive(false);
+        }
+
+        StopAllCoroutines();
+
+        if (activePlayerLabel != null)
+        {
+            activePlayerLabel.color = activeColor;
+            activePlayerLabel.text = tieMessage;
+        }
+    }
+
     private IEnumerator WaitProjectileThenAdvance(Projectile projectile)
     {
         float start = Time.time;
-        while (projectile != null && !projectile.HasImpacted && (Time.time - start) < maxProjectileLifeSeconds)
+        while (!_matchOver && projectile != null && !projectile.HasImpacted && (Time.time - start) < maxProjectileLifeSeconds)
             yield return null;
 
         if (projectile != null)
             Destroy(projectile.gameObject);
 
         _waitingForProjectile = false;
-        UpdateActivePlayerUI();
+        if (!_matchOver)
+            UpdateActivePlayerUI();
 
         yield return new WaitForSeconds(postShotDelaySeconds);
-        NextTurn();
+        if (!_matchOver)
+            NextTurn();
     }
 
     private void UpdateActivePlayerUI()
     {
         if (activePlayerLabel == null) return;
+
+        if (_matchOver)
+            return;
 
         if (_waitingForProjectile)
         {

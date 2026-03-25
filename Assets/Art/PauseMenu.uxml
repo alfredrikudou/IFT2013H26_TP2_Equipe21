@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Art/PauseMenuStyleSheet.uss"/>
+
+    <ui:VisualElement name="pause-panel" class="pause-panel" style="display: none;">
+        <ui:VisualElement class="pause-dialog">
+            <ui:Label text="PAUSE" name="pause-title" class="pause-title"/>
+
+            <ui:VisualElement name="pause-players__container" class="pause-players"/>
+
+            <ui:VisualElement name="pause-buttons__row" class="pause-buttons">
+                <ui:Button text="Resume" name="pause-resume__button" class="pause-button"/>
+                <ui:Button text="Home" name="pause-home__button" class="pause-button"/>
+                <ui:Button text="Quit" name="pause-quit__button" class="pause-button"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+

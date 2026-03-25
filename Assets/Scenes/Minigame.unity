@@ -119,6 +119,76 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &16390171
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 16390173}
+  - component: {fileID: 16390172}
+  - component: {fileID: 16390174}
+  m_Layer: 5
+  m_Name: UIDocument
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &16390172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16390171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: f0c5117490b6cb043816a02187bf923e, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 93f59d999bdcecb4f9a2f9135a07260e, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!4 &16390173
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16390171}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &16390174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16390171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d3d65e5d551bf348901f1b8d962b285, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GamePauseController
+  homeSceneName: MenuScene
+  toggleWithPKey: 1
 --- !u!4 &51877780 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 857442457081363215, guid: 96a7e39dbacf54d439ddab2eba57af67, type: 3}
@@ -393,7 +463,7 @@ MonoBehaviour:
   - {fileID: 611944775}
   wormPrefabSlots:
   - {fileID: 4099699840582463440, guid: 68d2a5c8df7bc0c45867323bf14278f0, type: 3}
-  - {fileID: 4099699840582463440, guid: 68d2a5c8df7bc0c45867323bf14278f0, type: 3}
+  - {fileID: 4461693037923815005, guid: 79e992a664a02d14ba7addeec6f0db7e, type: 3}
   - {fileID: 4461693037923815005, guid: 79e992a664a02d14ba7addeec6f0db7e, type: 3}
   - {fileID: 4461693037923815005, guid: 79e992a664a02d14ba7addeec6f0db7e, type: 3}
   maxProjectileLifeSeconds: 6
@@ -402,6 +472,9 @@ MonoBehaviour:
   activePlayerFormat: 'Joueur actif : {0}'
   activeColor: {r: 1, g: 1, b: 1, a: 1}
   waitingProjectileColor: {r: 1, g: 0.7, b: 0.3, a: 1}
+  winnerFormat: '{0} remporte la partie !'
+  winnerColor: {r: 0.4, g: 1, b: 0.5, a: 1}
+  tieMessage: "Partie termin\xE9e \u2014 plus aucun survivant"
 --- !u!4 &194537393
 Transform:
   m_ObjectHideFlags: 0
@@ -1086,61 +1159,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1117668198}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &471785184
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 471785186}
-  - component: {fileID: 471785185}
-  m_Layer: 5
-  m_Name: UIDocument
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &471785185
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 471785184}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
-  m_PanelSettings: {fileID: 11400000, guid: f0c5117490b6cb043816a02187bf923e, type: 2}
-  m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: 6484066fe4ddd0247b080fca0bbfb0fc, type: 3}
-  m_SortingOrder: 0
-  m_Position: 0
-  m_WorldSpaceSizeMode: 1
-  m_WorldSpaceWidth: 1920
-  m_WorldSpaceHeight: 1080
-  m_PivotReferenceSize: 0
-  m_Pivot: 0
-  m_WorldSpaceCollider: {fileID: 0}
---- !u!4 &471785186
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 471785184}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &504488338
 PrefabInstance:
@@ -3900,67 +3918,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 68d2a5c8df7bc0c45867323bf14278f0, type: 3}
---- !u!1001 &3560593200742777933
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2878498032303215018, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3688060763261487599, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_Name
-      value: Projectile
-      objectReference: {fileID: 0}
-    - target: {fileID: 3688060763261487599, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
 --- !u!1001 &4592440527079159877
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4082,14 +4039,13 @@ SceneRoots:
   - {fileID: 203844589}
   - {fileID: 1268319034}
   - {fileID: 1117668198}
-  - {fileID: 387453533896795260}
-  - {fileID: 325366198711665082}
   - {fileID: 252460483}
   - {fileID: 1953902516}
   - {fileID: 2012028734}
   - {fileID: 394556334}
   - {fileID: 1192193249}
-  - {fileID: 471785186}
   - {fileID: 194537393}
-  - {fileID: 3560593200742777933}
   - {fileID: 1333216901}
+  - {fileID: 387453533896795260}
+  - {fileID: 325366198711665082}
+  - {fileID: 16390173}

@@ -1010,7 +1010,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &471785185
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3273,6 +3273,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player2
       objectReference: {fileID: 0}
+    - target: {fileID: 8854775447360275055, guid: ffad0ca066b87ad4f8d2231d17e34676, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3299,7 +3303,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   speed: 10
-  isComputerControlled: 0
+  isComputerControlled: 1
   countText: {fileID: 736644816}
   winTextObject: {fileID: 527575799}
 --- !u!4 &1936703622 stripped

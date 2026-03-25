@@ -470,8 +470,8 @@ MonoBehaviour:
   postShotDelaySeconds: 0.4
   activePlayerLabel: {fileID: 988750358}
   activePlayerFormat: 'Joueur actif : {0}'
-  activeColor: {r: 1, g: 1, b: 1, a: 1}
-  waitingProjectileColor: {r: 1, g: 0.7, b: 0.3, a: 1}
+  activeColor: {r: 0.020904869, g: 0.033156622, b: 0.9496855, a: 1}
+  waitingProjectileColor: {r: 1, g: 0.50342536, b: 0, a: 1}
   winnerFormat: '{0} remporte la partie !'
   winnerColor: {r: 0.4, g: 1, b: 0.5, a: 1}
   tieMessage: "Partie termin\xE9e \u2014 plus aucun survivant"

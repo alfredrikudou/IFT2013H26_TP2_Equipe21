@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem.Controls;
 
 namespace Controls
 {
@@ -38,44 +41,36 @@ namespace Controls
             GP_Pause
         }
 
-
-        internal enum InputType
-        {
-            Button,
-            Stick,
-            Numerical
-        }
-
-        private static readonly Dictionary<PlayerSetting, InputType> _bindTypes =
-            new Dictionary<PlayerSetting, InputType>
+        private static readonly Dictionary<PlayerSetting, Type> _bindTypes =
+            new Dictionary<PlayerSetting, Type>
             {
-                { PlayerSetting.KB_MoveLeft, InputType.Button },
-                { PlayerSetting.KB_MoveRight, InputType.Button },
-                { PlayerSetting.KB_MoveUp, InputType.Button },
-                { PlayerSetting.KB_MoveDown, InputType.Button },
-                { PlayerSetting.GP_Move, InputType.Stick },
-                { PlayerSetting.KB_MoveSensitivity,InputType.Numerical },
-                { PlayerSetting.KB_MoveDeadZone,InputType.Numerical },
-                { PlayerSetting.KB_MoveGravity,InputType.Numerical },
-                { PlayerSetting.KB_MoveInverted,InputType.Numerical },
-                { PlayerSetting.GP_MoveInverted,InputType.Numerical },
+                { PlayerSetting.KB_MoveLeft, typeof(ButtonControl) },
+                { PlayerSetting.KB_MoveRight, typeof(ButtonControl) },
+                { PlayerSetting.KB_MoveUp, typeof(ButtonControl) },
+                { PlayerSetting.KB_MoveDown, typeof(ButtonControl) },
+                { PlayerSetting.GP_Move, typeof(StickControl) },
+                { PlayerSetting.KB_MoveSensitivity, typeof(float) },
+                { PlayerSetting.KB_MoveDeadZone, typeof(float) },
+                { PlayerSetting.KB_MoveGravity, typeof(float) },
+                { PlayerSetting.KB_MoveInverted, typeof(float) },
+                { PlayerSetting.GP_MoveInverted, typeof(float) },
 
-                { PlayerSetting.KB_AimLeft, InputType.Button },
-                { PlayerSetting.KB_AimRight, InputType.Button },
-                { PlayerSetting.KB_AimUp, InputType.Button },
-                { PlayerSetting.KB_AimDown, InputType.Button },
-                { PlayerSetting.GP_Aim, InputType.Stick },
-                { PlayerSetting.KB_AimSensitivity,InputType.Numerical },
-                { PlayerSetting.KB_AimDeadZone,InputType.Numerical },
-                { PlayerSetting.KB_AimGravity,InputType.Numerical },
-                { PlayerSetting.KB_AimInverted,InputType.Numerical },
-                { PlayerSetting.GP_AimInverted,InputType.Numerical },
+                { PlayerSetting.KB_AimLeft, typeof(ButtonControl) },
+                { PlayerSetting.KB_AimRight, typeof(ButtonControl) },
+                { PlayerSetting.KB_AimUp, typeof(ButtonControl) },
+                { PlayerSetting.KB_AimDown, typeof(ButtonControl) },
+                { PlayerSetting.GP_Aim, typeof(StickControl) },
+                { PlayerSetting.KB_AimSensitivity, typeof(float) },
+                { PlayerSetting.KB_AimDeadZone, typeof(float) },
+                { PlayerSetting.KB_AimGravity, typeof(float) },
+                { PlayerSetting.KB_AimInverted, typeof(float) },
+                { PlayerSetting.GP_AimInverted, typeof(float) },
 
-                { PlayerSetting.KB_Shoot, InputType.Button },
-                { PlayerSetting.GP_Shoot, InputType.Button },
+                { PlayerSetting.KB_Shoot, typeof(ButtonControl) },
+                { PlayerSetting.GP_Shoot, typeof(ButtonControl) },
 
-                { PlayerSetting.KB_Pause, InputType.Button },
-                { PlayerSetting.GP_Pause, InputType.Button },
+                { PlayerSetting.KB_Pause, typeof(ButtonControl) },
+                { PlayerSetting.GP_Pause, typeof(ButtonControl) },
             };
         
         
@@ -83,30 +78,31 @@ namespace Controls
         public static bool IsValidBindForAction(string action, string controlName)
         {
             PlayerSetting setting = System.Enum.Parse<PlayerSetting>(action);
-            if (IsFloatSetting(setting)) return controlName == "" ?  true : false;
-            InputType expected = _bindTypes[setting];
-            InputType actual = controlName.Contains("Stick") ? InputType.Stick : InputType.Button;
-            return expected == actual;
+            return IsValidBindForAction(setting, controlName);
         }
         
         public static bool IsValidBindForAction(PlayerSetting setting, string controlName)
         {
+            if (string.IsNullOrEmpty(controlName)) return false;
             if (IsFloatSetting(setting)) return float.TryParse(controlName, out _);
-            InputType expected = _bindTypes[setting];
-            InputType actual = controlName.Contains("Stick") ? InputType.Stick : InputType.Button;
-            return expected == actual;
+            Type expected = _bindTypes[setting];
+            foreach (var device in DeviceManager.Instance.GetAllDevices())
+            {
+                var control = device.TryGetChildControl(controlName);
+                Debug.Log($"Device: {device.name} | Control: {control?.name ?? "null"} | Type: {control?.GetType().Name ?? "null"}");
+                if (control != null && expected.IsInstanceOfType(control))
+                {
+                    Debug.Log("They matched!");
+                    return true;
+                }
+            }
+            Debug.LogWarning($"No match for {setting}");
+            return false;
         }
 
-        public static string GetValidBindComparison(PlayerSetting setting, string controlName)
-        {
-            if (IsFloatSetting(setting)) 
-                return float.TryParse(controlName, out _) ? $"Valid {InputType.Numerical}" :  $"Bind {setting} expects {InputType.Numerical} but control name was not a float '{controlName}'";
-            InputType expected = _bindTypes[setting];
-            InputType actual = controlName.Contains("Stick") ? InputType.Stick : InputType.Button;
-            return expected == actual ? $"Valid {expected}" :  $"Bind {setting} expects {expected} but got {actual} for path {controlName}";
-        }
+        public static Type GetExpectedType(PlayerSetting setting) => _bindTypes[setting];
         
         public static bool IsFloatSetting(PlayerSetting setting) 
-            => _bindTypes[setting] == InputType.Numerical;
+            => _bindTypes[setting] == typeof(float);
     }
 }

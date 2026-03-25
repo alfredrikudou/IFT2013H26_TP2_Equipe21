@@ -49,7 +49,7 @@ public class KeybindMenuEvents : MonoBehaviour
             foreach (string entry in player.BindMap.Split(';'))
             {
                 string[] parts = entry.Split(':');
-                _binds[player.Name][parts[0]] = parts[1].Split(',').ToList();
+                _binds[player.Name][parts[0]] = parts[1].Split(',').Where(b => !string.IsNullOrWhiteSpace(b)).ToList();
             }
         }
 
@@ -131,7 +131,7 @@ public class KeybindMenuEvents : MonoBehaviour
         foreach (string entry in serialized.Split(';'))
         {
             string[] parts = entry.Split(':');
-            newBinds[parts[0]] = parts[1].Split(',').ToList();
+            newBinds[parts[0]] = parts[1].Split(',').Where(b => !string.IsNullOrWhiteSpace(b)).ToList();
         }
 
         _binds[playerName] = newBinds;
@@ -199,6 +199,7 @@ public class KeybindMenuEvents : MonoBehaviour
 
         foreach (var bind in binds.ToList())
         {
+            if (string.IsNullOrWhiteSpace(bind)) continue;
             var button = new Button();
             button.text = bind;
             button.AddToClassList("key-button");
@@ -239,8 +240,9 @@ public class KeybindMenuEvents : MonoBehaviour
         else
         {
             float current = float.TryParse(currentValue, out float result) ? result : 1f;
-            var slider = new Slider(0f, 1f);
+            var slider = new Slider(0f, 10f);
             slider.value = current;
+            slider.style.flexGrow = 1;
 
             var valueLabel = new Label(current.ToString("F2"));
             valueLabel.AddToClassList("slider-value-label");
@@ -280,7 +282,9 @@ public class KeybindMenuEvents : MonoBehaviour
                 Debug.Log("Device is not bound to this player");
                 return;
             }
-            _binds[playerName][action].Add(controlName);
+            _binds[playerName][action].RemoveAll(string.IsNullOrWhiteSpace);
+            if(!_binds[playerName][action].Contains(controlName))
+                _binds[playerName][action].Add(controlName);
             RefreshUI();
         });
     }

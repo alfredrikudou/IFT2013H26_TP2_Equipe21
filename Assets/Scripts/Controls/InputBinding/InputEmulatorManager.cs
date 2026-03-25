@@ -59,7 +59,7 @@ namespace Controls.InputBinding
         private void Update()
         {
             foreach (var emulator in _emulators)
-                emulator.Tick();
+                emulator.Tick(Time.deltaTime);
         }
     }
 }

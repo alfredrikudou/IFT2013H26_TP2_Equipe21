@@ -11,10 +11,10 @@ namespace Controls.InputBinding
         private readonly Dictionary<PlayerSettings.PlayerSetting, List<string>> _binds =
             new Dictionary<PlayerSettings.PlayerSetting, List<string>>
             {
-                { PlayerSettings.PlayerSetting.KB_MoveLeft, new List<string> { "a", "leftArrow" } },
-                { PlayerSettings.PlayerSetting.KB_MoveRight, new List<string> { "d", "rightArrow" } },
-                { PlayerSettings.PlayerSetting.KB_MoveUp, new List<string> { "w", "upArrow" } },
-                { PlayerSettings.PlayerSetting.KB_MoveDown, new List<string> { "s", "downArrow" } },
+                { PlayerSettings.PlayerSetting.KB_MoveLeft, new List<string> { "a" } },
+                { PlayerSettings.PlayerSetting.KB_MoveRight, new List<string> { "d" } },
+                { PlayerSettings.PlayerSetting.KB_MoveUp, new List<string> { "w" } },
+                { PlayerSettings.PlayerSetting.KB_MoveDown, new List<string> { "s" } },
                 { PlayerSettings.PlayerSetting.KB_MoveSensitivity, new List<string> { "1" } },
                 { PlayerSettings.PlayerSetting.KB_MoveDeadZone, new List<string> { "0" } },
                 { PlayerSettings.PlayerSetting.KB_MoveGravity, new List<string> { "1" } },
@@ -46,12 +46,12 @@ namespace Controls.InputBinding
             {
                 if (!PlayerSettings.IsValidBindForAction(bind, value))
                 {
-                    Debug.LogWarning(PlayerSettings.GetValidBindComparison(bind, value));
+                    _binds[bind] = new List<string>();
+                    Debug.LogWarning($"{value} is not valid for bind {bind}. Expected typeof({PlayerSettings.GetExpectedType(bind)})");
                     return;
                 }
             }
-
-            _binds[bind] = values;
+            _binds[bind] = values.Distinct().ToList();
         }
 
         public Dictionary<MappableAction, List<IBindableInput>> CreateDeviceBind(params InputDevice[] devices)
@@ -90,7 +90,7 @@ namespace Controls.InputBinding
                         PlayerSettings.PlayerSetting.KB_AimDeadZone,
                         PlayerSettings.PlayerSetting.KB_AimInverted);
                     if (aimStick != null)
-                        AppendOrCreate(MappableAction.Aim, moveStick);
+                        AppendOrCreate(MappableAction.Aim, aimStick);
 
                     // Shoot
                     foreach (string path in _binds[PlayerSettings.PlayerSetting.KB_Shoot])
@@ -198,12 +198,13 @@ namespace Controls.InputBinding
 
         public void Deserialize(string data)
         {
-            _binds.Clear();
+            foreach (var key in _binds.Keys.ToList())
+                _binds[key] = new List<string>();
             foreach (string entry in data.Split(';'))
             {
                 string[] parts = entry.Split(':');
                 PlayerSettings.PlayerSetting bind = System.Enum.Parse<PlayerSettings.PlayerSetting>(parts[0]);
-                ChangeBind(bind, parts[1].Split(',').ToList());
+                ChangeBind(bind, parts[1].Split(',').Where(b => !string.IsNullOrWhiteSpace(b)).ToList());
             }
         }
 

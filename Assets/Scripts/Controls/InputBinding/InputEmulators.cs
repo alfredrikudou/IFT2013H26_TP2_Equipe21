@@ -11,10 +11,15 @@ namespace Controls.InputBinding
         private readonly float _deadZone;
         private readonly IBindableInput[] _plusActions;
         private readonly IBindableInput[] _minusActions;
+        static int cpt = 0;
+        private int id;
+        public int GetId() => id;
+
         public float Value { get; private set; }
 
         public AxisEmulator(IBindableInput[] plusActions, IBindableInput[] minusActions, float sensitivity = 1f, float gravity = 1f, float deadZone = 0f)
         {
+            id = cpt++;
             _plusActions = plusActions;
             _minusActions = minusActions;
             _sensitivity = sensitivity;
@@ -23,26 +28,26 @@ namespace Controls.InputBinding
             Value = 0;
         }
 
-        public void Tick()
+        public void Tick(float deltatime)
         {
             var plusHeld = _plusActions.Any(x => x.GetState() == InputState.Pressed || x.GetState() == InputState.Held);
             var minusHeld = _minusActions.Any(x => x.GetState() == InputState.Pressed || x.GetState() == InputState.Held);
 
             if (plusHeld && !minusHeld)
             {
-                Value = Mathf.Min(Value + _sensitivity, 1f);
+                Value = Mathf.Min(Value + _sensitivity * deltatime, 1f);
             }
             else if (minusHeld && !plusHeld)
             {
-                Value = Mathf.Max(Value - _sensitivity, -1f);
+                Value = Mathf.Max(Value - _sensitivity * deltatime, -1f);
             }
             else if (Value > _deadZone)
             {
-                Value = Mathf.Max(Value - _gravity, 0f);
+                Value = Mathf.Max(Value - _gravity * deltatime, 0f);
             }
             else if (Value < -_deadZone)
             {
-                Value = Mathf.Min(Value + _gravity, 0f);
+                Value = Mathf.Min(Value + _gravity * deltatime, 0f);
             }
             else
             {
@@ -53,6 +58,10 @@ namespace Controls.InputBinding
     
     public class StickEmulator : IStick, IEmulator
     {
+        static int cpt = 0;
+        private int id;
+        public int GetId() => id;
+        
         private readonly AxisEmulator _xAxis;
         private readonly  AxisEmulator _yAxis;
         private readonly bool _isInverted;
@@ -61,6 +70,7 @@ namespace Controls.InputBinding
 
         public StickEmulator(AxisEmulator xAxis, AxisEmulator yaxis, bool isInverted = false)
         {
+            id =  cpt++;
             _xAxis = xAxis;
             _yAxis = yaxis;
             _isInverted = isInverted;
@@ -68,17 +78,18 @@ namespace Controls.InputBinding
         }
 
 
-        public void Tick()
+        public void Tick(float deltatime)
         {
-            _xAxis.Tick();
-            _yAxis.Tick();
+            _xAxis.Tick(deltatime);
+            _yAxis.Tick(deltatime);
             Value = Vector2.ClampMagnitude(new Vector2(_xAxis.Value,_yAxis.Value), 1f);
         }
     }
 
     public interface IEmulator
     {
-        public void Tick();
+        public void Tick(float deltatime);
+        public int GetId();
     }
 
     public class UnityStick : IStick

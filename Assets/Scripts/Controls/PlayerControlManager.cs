@@ -38,7 +38,10 @@ namespace Controls
         private void SetupDefaultDevice()
         {
             var freeOrFirst = DeviceManager.Instance.GetFreeOrFirstDevice();
-            if(freeOrFirst == null)
+            if (freeOrFirst == null && Keyboard.current != null)
+                freeOrFirst = Keyboard.current;
+
+            if (freeOrFirst == null)
                 _boundDevices = Array.Empty<InputDevice>();
             else
             {

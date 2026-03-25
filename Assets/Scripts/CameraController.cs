@@ -1,3 +1,4 @@
+using Player;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
@@ -6,6 +7,7 @@ public class CameraController : MonoBehaviour
     public float m_DampTime = 0.2f;                 // Approximate time for the camera to refocus.
     public float m_ScreenEdgeBuffer = 4f;           // Space between the top/bottom most target and the screen edge.
     public float m_MinSize = 6.5f;                  // The smallest orthographic size the camera can be.
+    [Tooltip("Si vide, les transforms des objets Player dans la scène sont utilisés au démarrage.")]
     public Transform[] m_Targets;                   // All the targets the camera needs to encompass.
 
 
@@ -18,6 +20,8 @@ public class CameraController : MonoBehaviour
 
     private void Awake ()
     {
+        EnsureTargets();
+
         m_Camera = GetComponentInChildren<Camera> ();
         
         // plane in which the camera rig is in
@@ -32,6 +36,49 @@ public class CameraController : MonoBehaviour
         // center of this, meaning placing this object at the desired position won't make the camera aim at that desired position.
         // This offset correct that so the camera actually aim at the desired position
         m_AimToRig = transform.position - aimTArget;
+    }
+
+    private void EnsureTargets()
+    {
+        if (m_Targets != null && m_Targets.Length > 0)
+        {
+            bool any = false;
+            foreach (var t in m_Targets)
+            {
+                if (t != null) { any = true; break; }
+            }
+            if (any) return;
+        }
+
+        var players = FindObjectsOfType<Player.Player>(false);
+        if (players == null || players.Length == 0)
+        {
+            Debug.LogWarning("[CameraController] Aucun Player trouvé : assignez m_Targets dans l'inspecteur ou ajoutez des joueurs dans la scène.");
+            m_Targets = System.Array.Empty<Transform>();
+            return;
+        }
+
+        var list = new System.Collections.Generic.List<Transform>();
+        foreach (var p in players)
+            if (p != null) list.Add(p.transform);
+
+        m_Targets = list.ToArray();
+    }
+
+    /// <summary>À appeler après instanciation des joueurs (ex. TurnManager) pour reprendre les transforms des Player.</summary>
+    public void RequestTargetsRefreshFromPlayers()
+    {
+        if (m_Targets != null && m_Targets.Length > 0)
+        {
+            foreach (var t in m_Targets)
+            {
+                if (t != null)
+                    return;
+            }
+        }
+
+        m_Targets = null;
+        EnsureTargets();
     }
 
 
@@ -58,12 +105,19 @@ public class CameraController : MonoBehaviour
 
     private void FindAveragePosition ()
     {
+        if (m_Targets == null || m_Targets.Length == 0)
+        {
+            m_DesiredPosition = transform.position;
+            return;
+        }
+
         Vector3 averagePos = new Vector3 ();
         int numTargets = 0;
 
         // Go through all the targets and add their positions together.
         for (int i = 0; i < m_Targets.Length; i++)
         {
+            if (m_Targets[i] == null) continue;
             // If the target isn't active, go on to the next one.
             if (!m_Targets[i].gameObject.activeSelf)
                 continue;
@@ -94,6 +148,9 @@ public class CameraController : MonoBehaviour
 
     private float FindRequiredSize ()
     {
+        if (m_Targets == null || m_Targets.Length == 0)
+            return m_MinSize;
+
         // Find the position the camera rig is moving towards in its local space.
         Vector3 desiredLocalPos = m_Camera.transform.InverseTransformPoint(m_DesiredPosition);
 
@@ -103,6 +160,7 @@ public class CameraController : MonoBehaviour
         // Go through all the targets...
         for (int i = 0; i < m_Targets.Length; i++)
         {
+            if (m_Targets[i] == null) continue;
             // ... and if they aren't active continue on to the next target.
             if (!m_Targets[i].gameObject.activeSelf)
                 continue;

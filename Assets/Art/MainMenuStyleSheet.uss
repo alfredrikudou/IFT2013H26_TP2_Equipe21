@@ -138,9 +138,9 @@
     border-width: 0px;
 }
 
-.setup-name-field:focus-within {
-    border-width: 0px;
-}
+/*.setup-name-field:focus-within {*/
+/*    border-width: 0px;*/
+/*}*/
 
 .setup-name-field .unity-text-input__placeholder {
     color: rgba(230, 230, 230, 0.55);

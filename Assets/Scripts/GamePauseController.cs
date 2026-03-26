@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Player;
@@ -5,6 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using UnityEngine.InputSystem;
+using Object = UnityEngine.Object;
 
 /// <summary>
 /// Pause au clavier (touche P) + affichage UI (résumé + HP de tous les joueurs).
@@ -15,6 +17,8 @@ public class GamePauseController : MonoBehaviour
 {
     [SerializeField] private string homeSceneName = "MenuScene";
     [SerializeField] private bool toggleWithPKey = true;
+    
+    public event Action OnSettingsRequested;
 
     private UIDocument _document;
     private VisualElement _pausePanel;
@@ -29,27 +33,22 @@ public class GamePauseController : MonoBehaviour
         _playersContainer = root.Q<VisualElement>("pause-players__container");
 
         root.Q<Button>("pause-resume__button")?.RegisterCallback<ClickEvent>(_ => Resume());
+        root.Q<Button>("pause-setting__button")?.RegisterCallback<ClickEvent>(_ => OnSettingsRequested?.Invoke());
         root.Q<Button>("pause-home__button")?.RegisterCallback<ClickEvent>(_ => GoHome());
         root.Q<Button>("pause-quit__button")?.RegisterCallback<ClickEvent>(_ => QuitGame());
 
         HidePanelImmediate();
     }
 
-    private void Update()
+    public void SetPause(bool pause)
     {
-        if (!toggleWithPKey) return;
-        if (TurnManager.Instance != null && TurnManager.Instance.IsMatchOver) return;
-
-        if (Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame)
-        {
-            if (GamePauseState.IsPaused)
-                Resume();
-            else
-                Pause();
-        }
+        if (GamePauseState.IsPaused && !pause)
+            Resume();
+        else if(!GamePauseState.IsPaused && pause)
+            Pause();
     }
 
-    private void Pause()
+    public void Pause()
     {
         if (GamePauseState.IsPaused) return;
         GamePauseState.SetPaused(true);
@@ -62,7 +61,7 @@ public class GamePauseController : MonoBehaviour
         UnityEngine.Cursor.lockState = CursorLockMode.None;
     }
 
-    private void Resume()
+    public void Resume()
     {
         if (!GamePauseState.IsPaused) return;
         GamePauseState.SetPaused(false);
@@ -98,13 +97,13 @@ public class GamePauseController : MonoBehaviour
 #endif
     }
 
-    private void ShowPanel()
+    public void ShowPanel()
     {
         if (_pausePanel == null) return;
         _pausePanel.style.display = DisplayStyle.Flex;
     }
 
-    private void HidePanelImmediate()
+    public void HidePanelImmediate()
     {
         if (_pausePanel == null) return;
         _pausePanel.style.display = DisplayStyle.None;

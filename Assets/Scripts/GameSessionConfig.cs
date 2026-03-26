@@ -19,7 +19,7 @@ public static class GameSessionConfig
 
     public static void PrepareFromMenu(int playerCount, bool[] computerControlledPerSlot, string[] playerNamesPerSlot)
     {
-        PlayerCount = Mathf.Clamp(playerCount, TurnManager.MinPlayers, TurnManager.MaxPlayers);
+        PlayerCount = Mathf.Clamp(playerCount, GameManager.MinPlayers, GameManager.MaxPlayers);
         LoadedFromMenu = true;
 
         for (int i = 0; i < 4; i++)
@@ -39,7 +39,7 @@ public static class GameSessionConfig
     {
         if (LoadedFromMenu)
             return PlayerCount;
-        return Mathf.Clamp(inspectorDefault, TurnManager.MinPlayers, TurnManager.MaxPlayers);
+        return Mathf.Clamp(inspectorDefault, GameManager.MinPlayers, GameManager.MaxPlayers);
     }
 
     public static string GetPlayerNameForSlot(int slotIndex)
@@ -55,11 +55,11 @@ public static class GameSessionConfig
         return s.Trim();
     }
 
-    public static void ApplyComputerFlagsToSpawnedPlayers(System.Collections.Generic.IReadOnlyList<Player.Player> sortedPlayers)
-    {
-        if (!LoadedFromMenu) return;
-        for (int i = 0; i < sortedPlayers.Count && i < 4; i++)
-            sortedPlayers[i].SetComputerControlled(s_computerSlot[i]);
-        LoadedFromMenu = false;
-    }
+    // public static void ApplyComputerFlagsToSpawnedPlayers(System.Collections.Generic.IReadOnlyList<Player.Player> sortedPlayers)
+    // {
+    //     if (!LoadedFromMenu) return;
+    //     for (int i = 0; i < sortedPlayers.Count && i < 4; i++)
+    //         sortedPlayers[i].SetComputerControlled(s_computerSlot[i]);
+    //     LoadedFromMenu = false;
+    // }
 }

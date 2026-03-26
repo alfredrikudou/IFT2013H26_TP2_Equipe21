@@ -18,6 +18,16 @@ namespace Controls
 
         ~PlayerControlManager()
         {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            foreach (var boundDevice in _boundDevices.ToList())
+            {
+                RemoveDevice(boundDevice);
+                DeviceManager.Instance.Unregister(this, boundDevice);
+            }
             foreach (var binds in _deviceBindings.Values)
             {
                 foreach (var bind in binds)

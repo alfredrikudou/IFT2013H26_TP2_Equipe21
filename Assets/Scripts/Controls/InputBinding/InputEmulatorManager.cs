@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace Controls.InputBinding
@@ -6,6 +7,7 @@ namespace Controls.InputBinding
     public class InputEmulatorManager : MonoBehaviour
     {
         private static InputEmulatorManager _instance;
+
         public static InputEmulatorManager Instance
         {
             get
@@ -16,12 +18,14 @@ namespace Controls.InputBinding
                     _instance = go.AddComponent<InputEmulatorManager>();
                     DontDestroyOnLoad(go);
                 }
+
                 return _instance;
             }
             private set => _instance = value;
         }
+
         private IEmulator[] _emulators = Array.Empty<IEmulator>();
-        
+
         private void Awake()
         {
             if (_instance != null && _instance != this)
@@ -36,8 +40,9 @@ namespace Controls.InputBinding
 
         private void OnDestroy()
         {
-            if (Instance == this)
-                Instance = null;
+            if (_instance == this)
+                _instance = null;
+            _emulators = Array.Empty<IEmulator>();
         }
 
         public T Register<T>(T emulator) where T : IEmulator

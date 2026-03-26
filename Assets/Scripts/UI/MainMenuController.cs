@@ -121,7 +121,7 @@ public class MainMenuController : MonoBehaviour
     private void LaunchGame()
     {
         int count = 2 + (_playerCountDropdown != null ? _playerCountDropdown.index : 0);
-        count = Mathf.Clamp(count, TurnManager.MinPlayers, TurnManager.MaxPlayers);
+        count = Mathf.Clamp(count, GameManager.MinPlayers, GameManager.MaxPlayers);
 
         var computer = new bool[4];
         var names = new string[4];

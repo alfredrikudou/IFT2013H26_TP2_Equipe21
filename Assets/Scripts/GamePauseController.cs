@@ -16,7 +16,6 @@ using Object = UnityEngine.Object;
 public class GamePauseController : MonoBehaviour
 {
     [SerializeField] private string homeSceneName = "MenuScene";
-    [SerializeField] private bool toggleWithPKey = true;
     
     public event Action OnSettingsRequested;
 

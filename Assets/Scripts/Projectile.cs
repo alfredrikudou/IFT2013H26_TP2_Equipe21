@@ -1,3 +1,4 @@
+using System;
 using Player;
 using UnityEngine;
 
@@ -6,6 +7,7 @@ public class Projectile : MonoBehaviour
     public bool HasImpacted { get; private set; }
 
     [SerializeField] private float lifeSeconds = 8f;
+    private Rigidbody _rb;
 
     private float _spawnTime;
     private Player.Player _shooter;
@@ -16,15 +18,23 @@ public class Projectile : MonoBehaviour
     private void Start()
     {
         _spawnTime = Time.time;
+        
+    }
+
+    private void Awake()
+    {
+        _rb = GetComponent<Rigidbody>();
     }
 
     /// <summary>À appeler juste après Instantiate (avant le premier FixedUpdate si possible).</summary>
-    public void Init(Player.Player shooter, float explosionRadius, float maxDamageAtCenter, bool damageShooter)
+    public void Init(Player.Player shooter, float explosionRadius, float maxDamageAtCenter, bool damageShooter, Vector3 direction, float speed)
     {
         _shooter = shooter;
         _explosionRadius = explosionRadius;
         _maxDamage = maxDamageAtCenter;
         _damageShooter = damageShooter;
+        
+        _rb.linearVelocity = direction * speed;
     }
 
     private void Update()
@@ -62,6 +72,7 @@ public class Projectile : MonoBehaviour
             float dmg = _maxDamage * falloff;
             player.TakeDamage(dmg);
         }
+        Destroy(gameObject);
     }
 
 #if UNITY_EDITOR

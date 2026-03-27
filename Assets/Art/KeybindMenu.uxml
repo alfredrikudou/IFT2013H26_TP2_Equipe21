@@ -1,6 +1,5 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Art/KeybindMenuStyle.uss?fileID=7433441132597879392&amp;guid=79327db487afb874b91ec49990c353b8&amp;type=3#KeybindMenuStyle"/>
-    <Style src="project://database/Assets/Art/PauseMenuStyleSheet.uss?fileID=7433441132597879392&amp;guid=5992cd9d05a3d1041ac108f6eaccc180&amp;type=3#PauseMenuStyleSheet"/>
     <ui:VisualElement name="Container" class="pause-panel setting-panel" style="flex-grow: 1; width: 100%; height: 100%;">
         <ui:TabView name="PlayerTabView"/>
         <ui:Button text="Return" name="return-button" class="setting-button"/>

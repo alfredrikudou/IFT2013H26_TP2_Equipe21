@@ -199,7 +199,7 @@ MonoBehaviour:
   _pitchMax: 60
   _maxHealth: 100
   _firePoint: {fileID: 8117999755632317313}
-  _projectilePrefab: {fileID: 8328599586506746259, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
+  _projectilePrefab: {fileID: 7408767476391567606, guid: 78aa66b4f1ce3b243905dc79656dac61, type: 3}
   _muzzleDistance: 0.8
   _minShotSpeed: 6
   _maxShotSpeed: 18

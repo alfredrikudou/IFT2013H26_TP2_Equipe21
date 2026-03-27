@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Player;
 using TMPro;
+using UI;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -165,38 +166,19 @@ public class GameManager : MonoBehaviour
 
         if (alive.Count <= 1)
         {
-            if (alive.Count == 0) EndMatchTie();
-            else EndMatchWinner(alive[0]);
-            FindFirstObjectByType<GamePauseController>()?.SetPause(true);
+            if (alive.Count == 0) EndMatch("The game ended in a tie!");
+            else EndMatch($"{alive[0].GetName()} won the game!");
         }
     }
 
-    private void EndMatchWinner(Player.Player winner)
-    {
-        if (_matchOver || winner == null) return;
-        _matchOver = true;
-
-        // StopAllCoroutines();
-
-        if (activePlayerLabel != null)
-        {
-            activePlayerLabel.color = winnerColor;
-            activePlayerLabel.text = string.Format(winnerFormat, winner.GetName());
-        }
-    }
-
-    private void EndMatchTie()
+    private void EndMatch(string endMessage = "This game ended!")
     {
         if (_matchOver) return;
         _matchOver = true;
 
         // StopAllCoroutines();
 
-        if (activePlayerLabel != null)
-        {
-            activePlayerLabel.color = activeColor;
-            activePlayerLabel.text = tieMessage;
-        }
+        FindFirstObjectByType<EndGameUIEvents>().EndGame(endMessage);
     }
     
     public PlayerControlDTO[] GetPlayersProfiles() => _players != null

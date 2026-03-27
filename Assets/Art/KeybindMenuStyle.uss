@@ -72,6 +72,6 @@
     justify-content: center;
 }
 
-.pause-button:hover {
+.setting-button:hover {
     scale: 1.05 1.05;
 }

@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Art/PauseMenuStyleSheet.uss?fileID=7433441132597879392&amp;guid=5992cd9d05a3d1041ac108f6eaccc180&amp;type=3#PauseMenuStyleSheet"/>
+    <ui:VisualElement name="pause-panel" class="pause-panel" style="display: none;">
+        <ui:VisualElement class="pause-dialog">
+            <ui:Label text="GAME OVER" name="pause-title" class="pause-title"/>
+            <ui:VisualElement name="pause-players__container" class="pause-players">
+                <ui:Label text="Label" name="endgame_result_label"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="pause-buttons__row" class="pause-buttons">
+                <ui:Button text="Home" name="pause-home__button" class="pause-button"/>
+                <ui:Button text="Quit" name="pause-quit__button" class="pause-button"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

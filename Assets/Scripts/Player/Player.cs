@@ -19,7 +19,7 @@ namespace Player
         [SerializeField] protected Transform _cannon;
         [SerializeField] protected float _aimSpeed = 90f;
         [SerializeField] protected float _pitchMin = -30f;
-        [SerializeField] protected float _pitchMax = 60f;
+        [SerializeField] protected float _pitchMax = 0f;
         protected float _aimYaw;
         protected float _aimPitch;
 
@@ -29,7 +29,7 @@ namespace Player
 
         [Header("Shooting")]
         [SerializeField] protected Transform _firePoint;
-        [SerializeField] protected Rigidbody _projectilePrefab;
+        [SerializeField] protected Projectile _projectilePrefab;
         [SerializeField] protected float _muzzleDistance = 0.8f;
         [SerializeField] protected float _minShotSpeed = 6f;
         [SerializeField] protected float _maxShotSpeed = 18f;
@@ -239,14 +239,8 @@ namespace Player
             if (_firePoint == null) return;
 
             float speed = Mathf.Lerp(_minShotSpeed, _maxShotSpeed, Mathf.Clamp01(charge01));
-            Rigidbody proj = Instantiate(_projectilePrefab, _firePoint.position, _firePoint.rotation);
-
-            // Ensure it has a Projectile behaviour so TurnManager can track impact.
-            var tracker = proj.GetComponent<Projectile>();
-            if (tracker == null) tracker = proj.gameObject.AddComponent<Projectile>();
-            tracker.Init(this, _explosionRadius, _explosionMaxDamage, _explosionDamagesShooter);
-
-            proj.linearVelocity = _firePoint.forward * speed;
+            var projectile = Instantiate(_projectilePrefab, _firePoint.position, _firePoint.rotation);
+            projectile.Init(this, _explosionRadius, _explosionMaxDamage, _explosionDamagesShooter, _firePoint.forward, speed);
         }
 
         private void EnsureFirePoint()

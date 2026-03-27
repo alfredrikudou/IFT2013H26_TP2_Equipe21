@@ -261,7 +261,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5465dbd19da020d43bf500e748f82003, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.KeybindMenuEvents
-  gameManager: {fileID: 194537392}
 --- !u!1 &81924506
 GameObject:
   m_ObjectHideFlags: 0
@@ -274,7 +273,7 @@ GameObject:
   - component: {fileID: 81924509}
   - component: {fileID: 81924508}
   - component: {fileID: 81924507}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Obstacles (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -488,6 +487,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: DynamicBox (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 7566899207176860904, guid: dc6b87dc2b66eed4fb2cf1b38fcd285e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -551,6 +554,56 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 5.386, y: 1.23506, z: 0.52795}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &199846011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 199846013}
+  - component: {fileID: 199846012}
+  m_Layer: 0
+  m_Name: PathfindController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &199846012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 199846011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a60dbffd4a8d35a408a8cdfeed207b6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Pathfinding.PathfindController
+  _mapPlane: {fileID: 1117668198}
+  _defaultPlaneSize: 10
+  _nodeSize: 0.1
+  _wallLayer:
+    serializedVersion: 2
+    m_Bits: 0
+--- !u!4 &199846013
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 199846011}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.48999, y: 0, z: -4.895}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -823,7 +876,7 @@ GameObject:
   - component: {fileID: 366433634}
   - component: {fileID: 366433633}
   - component: {fileID: 366433632}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Obstacles
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1014,7 +1067,7 @@ GameObject:
   - component: {fileID: 412298333}
   - component: {fileID: 412298332}
   - component: {fileID: 412298331}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Obstacles (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1126,7 +1179,7 @@ GameObject:
   - component: {fileID: 437975821}
   - component: {fileID: 437975820}
   - component: {fileID: 437975819}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Obstacles (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1277,6 +1330,10 @@ PrefabInstance:
     - target: {fileID: 7566899207176860904, guid: dc6b87dc2b66eed4fb2cf1b38fcd285e, type: 3}
       propertyPath: m_Name
       value: DynamicBox (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7566899207176860904, guid: dc6b87dc2b66eed4fb2cf1b38fcd285e, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2295,6 +2352,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: DynamicBox (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 7566899207176860904, guid: dc6b87dc2b66eed4fb2cf1b38fcd285e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2426,7 +2487,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1117668194}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
   m_Name: 
@@ -3083,7 +3144,7 @@ GameObject:
   - component: {fileID: 1660794860}
   - component: {fileID: 1660794859}
   - component: {fileID: 1660794858}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Obstacles (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3599,6 +3660,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: DynamicBox (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 7566899207176860904, guid: dc6b87dc2b66eed4fb2cf1b38fcd285e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3958,6 +4023,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: DynamicBox
       objectReference: {fileID: 0}
+    - target: {fileID: 7566899207176860904, guid: dc6b87dc2b66eed4fb2cf1b38fcd285e, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4036,3 +4105,4 @@ SceneRoots:
   - {fileID: 194537393}
   - {fileID: 1333216901}
   - {fileID: 556732145}
+  - {fileID: 199846013}

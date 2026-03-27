@@ -1,31 +1,50 @@
+// using System;
 // using System.Collections;
+// using System.Collections.Generic;
+// using System.Linq;
+// using Pathfinding;
 // using UnityEngine;
 //
-// namespace Player
+// namespace AI
 // {
-//     public class AiController : Player
+//     public class AiController : MonoBehaviour
 //     {
-//         [Header("IA (si contrôle ordinateur)")]
+//         [Header("IA")]
 //         [SerializeField] private float _aiAimToleranceDegrees = 10f;
 //         [SerializeField] private float _aiMaxAimSeconds = 4f;
 //         [SerializeField] private float _aiChargeMin = 0.72f;
 //         [SerializeField] private float _aiChargeMax = 1f;
+//         
 //         [Tooltip("Distance horizontale max pour commencer à charger / tirer. Au-delà, l’IA avance vers la cible (portée « confortable »).")]
 //         [SerializeField] private float _aiComfortShotRange = 14f;
+//         
 //         [Tooltip("Dès que la cible est plus loin que ça (horizontal), l’IA marche vers elle (même proche du joueur).")]
 //         [SerializeField] private float _aiAlwaysMoveIfFartherThan = 2.5f;
+//         
 //         [Tooltip("Petit déplacement latéral pour ne pas rester statique quand la cible est à portée.")]
 //         [SerializeField] private float _aiStrafeAmplitude = 0.35f;
 //         
 //         private enum AiPhase { Idle, Aim, Charge }
 //         private AiPhase _aiPhase = AiPhase.Idle;
-//         private Player _aiTarget;
+//         private Player.Player _aiTarget;
 //         private float _aiChargeGoal;
 //         private bool _aiNoTargetShotDone;
 //         private float _aiAimStartTime;
+//
+//         [SerializeField] private PathfindController _pathfinder;
+//
+//         [SerializeField] private float _timeBetweenTargetPositionUpdates = 5f; // seconds
+//         private float _lastUpdateTargetTime;
+//         private bool targetReached = false;
+//         private Vector3 _currentTargetPosition;
+//         private Vector3[] _path; // nodes / position to reach the target
+//         private int _pathIndex = 0;
+//
+//         private Rigidbody _rb;
 //         
 //         private void Start()
 //         {
+//             _rb = GetComponent<Rigidbody>();
 //             StartCoroutine(RunBehaviour());
 //         }
 //
@@ -33,8 +52,8 @@
 //         {
 //             while (true)
 //             {
-//                 // Select target
-//                 PickTarget();
+//                 if(targetReached || (Time.time - _lastUpdateTargetTime) > _timeBetweenTargetPositionUpdates)
+//                     UpdateMoveSet();
 //                 yield return new WaitForSeconds(_targetSelectDelay);
 //
 //                 // Follow target
@@ -54,27 +73,58 @@
 //             }
 //         }
 //         
+//         private void FixedUpdate()
+//         {
+//             if (targetReached || _path == null || _pathIndex >= _path.Length) return;
+//
+//             Vector3 waypoint  = _path[_waypointIndex];
+//             Vector3 direction = (waypoint - transform.position).normalized;
+//
+//             _rb.linearVelocity = new Vector3(direction.x * _moveSpeed, _rb.linearVelocity.y, direction.z * _moveSpeed);
+//
+//             if (Vector3.Distance(transform.position, waypoint) < _arrivalThreshold)
+//                 _waypointIndex++;
+//         }
+//
+//
+//         public void CheckLOS()
+//         {
+//             var positions = GameManager.Instance.GetPlayersPositions().Where(x => (x - gameObject.transform.position).sqrMagnitude > 1f).ToList();
+//             if (!positions.Any(HasLineOfSight)) return;
+//             _lastUpdateTargetTime = Time.time;
+//             _currentTargetPosition = positions.First(HasLineOfSight);
+//             targetReached = true;
+//             _path = Array.Empty<Vector3>();
+//             _pathIndex = 0;
+//         }
+//         private void UpdateMoveSet()
+//         {
+//             var positions = GameManager.Instance.GetPlayersPositions().Where(x => (x - gameObject.transform.position).sqrMagnitude > 1f).ToList();
+//             var targetPosition = positions.FirstOrDefault();
+//             foreach (var position in positions)
+//             {
+//                 if((position - gameObject.transform.position).sqrMagnitude > (targetPosition - gameObject.transform.position).sqrMagnitude)
+//                     targetPosition = position;
+//             }
+//             _currentTargetPosition = targetPosition;
+//             targetReached = (targetPosition - gameObject.transform.position).sqrMagnitude < 0.1;
+//             _pathIndex = 0;
+//             _path =  _pathfinder.GetPath(gameObject.transform.position, _currentTargetPosition).ToArray();
+//         }
+//         
+//         private bool HasLineOfSight(Vector3 target)
+//         {
+//             Vector3 direction = target - transform.position;
+//             if (direction.sqrMagnitude > _aiComfortShotRange * _aiComfortShotRange) return false;
+//             LayerMask mask = LayerMask.GetMask("Obstacle", "Wall");
+//             return !Physics.Raycast(transform.position, direction.normalized, direction.magnitude, mask);
+//         }
+//         
 //         private bool AiIsAimedAtTarget()
 //         {
 //             Vector3 aimPoint = _aiTarget.transform.position + Vector3.up * 0.5f;
 //             Vector3 desired = (aimPoint - _firePoint.position).normalized;
 //             return Vector3.Angle(_firePoint.forward, desired) <= _aiAimToleranceDegrees;
-//         }
-//         
-//         private void PickAiTarget()
-//         {
-//             _aiTarget = null;
-//             float best = float.MaxValue;
-//             foreach (var p in FindObjectsOfType<Player>(false))
-//             {
-//                 if (p == this || p.IsDead) continue;
-//                 float d = (p.transform.position - transform.position).sqrMagnitude;
-//                 if (d < best)
-//                 {
-//                     best = d;
-//                     _aiTarget = p;
-//                 }
-//             }
 //         }
 //
 //         /// <summary>IA : priorité au plus proche (meilleure chance de toucher), puis visée + tir chargé.</summary>

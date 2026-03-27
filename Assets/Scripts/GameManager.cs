@@ -193,4 +193,9 @@ public class GameManager : MonoBehaviour
                 player.UpdateControl(dto);
         }
     }
+
+    public List<Vector3> GetPlayersPositions()
+    {
+        return _players.ConvertAll(p => p.transform.position);
+    }
 }

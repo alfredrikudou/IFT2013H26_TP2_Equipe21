@@ -103,7 +103,7 @@ public class PlayerHealth : MonoBehaviour
             if (m_ExplosionAudio != null)
                 m_ExplosionAudio.Play();
         }
-
+        
         gameObject.SetActive(false);
     }
 

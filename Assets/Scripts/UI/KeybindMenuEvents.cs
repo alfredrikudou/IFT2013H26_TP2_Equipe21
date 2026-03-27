@@ -15,7 +15,6 @@ namespace UI
     public class KeybindMenuEvents : MonoBehaviour
     {
         public event Action OnBackRequested;
-        [SerializeField] private GameManager gameManager;
         private Dictionary<string, Dictionary<string, List<string>>> _binds = new Dictionary<string, Dictionary<string, List<string>>>();
         private Dictionary<string, List<string>> _devices = new Dictionary<string, List<string>>();
         private UIDocument _document;
@@ -32,7 +31,7 @@ namespace UI
 
         private void BuildUI()
         {
-            var players = gameManager.GetPlayersProfiles();
+            var players = GameManager.Instance.GetPlayersProfiles();
             _binds.Clear();
             foreach (var player in players)
             {
@@ -296,7 +295,7 @@ namespace UI
         private void OnSaveClicked(string playerName)
         {
             var dto = new PlayerControlDTO(playerName, _binds[playerName], _devices[playerName]);
-            gameManager.UpdatePlayerControl(dto);
+            GameManager.Instance.UpdatePlayerControl(dto);
         }
 
         private bool IsDeviceBound(string playerName, InputDevice device)

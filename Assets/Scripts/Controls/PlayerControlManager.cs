@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Agents;
 using Controls.InputBinding;
-using Player;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -151,7 +151,7 @@ namespace Controls
                 d.displayName + ":" + d.deviceId
                 );
 
-        public void UpdateControl(PlayerControlDTO dto)
+        public void UpdateControl(PlayerControlDto dto)
         {
             foreach (var boundDevice in _boundDevices.ToArray())
             {

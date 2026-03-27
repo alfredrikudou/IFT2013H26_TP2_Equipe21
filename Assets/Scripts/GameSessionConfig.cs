@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -62,4 +63,8 @@ public static class GameSessionConfig
     //         sortedPlayers[i].SetComputerControlled(s_computerSlot[i]);
     //     LoadedFromMenu = false;
     // }
+    public static int GetComputerCount()
+    {
+        return s_computerSlot.Count(x => x);
+    }
 }

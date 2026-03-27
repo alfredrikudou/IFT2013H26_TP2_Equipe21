@@ -527,14 +527,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurnManager
   spawnPlayersAtStart: 1
   numberOfPlayers: 3
-  numberOfAi: 0
+  numberOfAi: 1
   spawnPoints:
   - {fileID: 734245163}
   - {fileID: 1593155351}
   - {fileID: 289578874}
   - {fileID: 611944775}
   playerPrefab: {fileID: 4099699840582463440, guid: 68d2a5c8df7bc0c45867323bf14278f0, type: 3}
-  aiPrefab: {fileID: 0}
+  aiPrefab: {fileID: 4099699840582463440, guid: e6ba7844d2527c4449ac8237372a9896, type: 3}
   maxProjectileLifeSeconds: 6
   postShotDelaySeconds: 0.4
   activePlayerLabel: {fileID: 988750358}

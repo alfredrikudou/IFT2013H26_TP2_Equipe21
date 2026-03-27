@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Agents;
 using Controls;
-using Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -294,7 +294,7 @@ namespace UI
 
         private void OnSaveClicked(string playerName)
         {
-            var dto = new PlayerControlDTO(playerName, _binds[playerName], _devices[playerName]);
+            var dto = new PlayerControlDto(playerName, _binds[playerName], _devices[playerName]);
             GameManager.Instance.UpdatePlayerControl(dto);
         }
 

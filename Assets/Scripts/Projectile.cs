@@ -1,5 +1,4 @@
 using System;
-using Player;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
@@ -10,7 +9,7 @@ public class Projectile : MonoBehaviour
     private Rigidbody _rb;
 
     private float _spawnTime;
-    private Player.Player _shooter;
+    private Agents.Agent _shooter;
     private float _explosionRadius = 3f;
     private float _maxDamage = 40f;
     private bool _damageShooter = true;
@@ -27,7 +26,7 @@ public class Projectile : MonoBehaviour
     }
 
     /// <summary>À appeler juste après Instantiate (avant le premier FixedUpdate si possible).</summary>
-    public void Init(Player.Player shooter, float explosionRadius, float maxDamageAtCenter, bool damageShooter, Vector3 direction, float speed)
+    public void Init(Agents.Agent shooter, float explosionRadius, float maxDamageAtCenter, bool damageShooter, Vector3 direction, float speed)
     {
         _shooter = shooter;
         _explosionRadius = explosionRadius;
@@ -60,17 +59,17 @@ public class Projectile : MonoBehaviour
         Collider[] hits = Physics.OverlapSphere(center, _explosionRadius, ~0, QueryTriggerInteraction.Ignore);
         foreach (Collider col in hits)
         {
-            var player = col.GetComponentInParent<Player.Player>();
-            if (player == null) continue;
-            if (!_damageShooter && player == _shooter) continue;
+            var agent = col.GetComponentInParent<Agents.Agent>();
+            if (agent == null) continue;
+            if (!_damageShooter && agent == _shooter) continue;
 
-            float dist = Vector3.Distance(center, player.transform.position);
+            float dist = Vector3.Distance(center, agent.transform.position);
             if (dist > _explosionRadius) continue;
 
             float falloff = 1f - (dist / _explosionRadius);
             falloff = Mathf.Clamp01(falloff);
             float dmg = _maxDamage * falloff;
-            player.TakeDamage(dmg);
+            agent.TakeDamage(dmg);
         }
         Destroy(gameObject);
     }

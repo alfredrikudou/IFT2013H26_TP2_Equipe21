@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Player;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -114,7 +113,7 @@ public class GamePauseController : MonoBehaviour
 
         _playersContainer.Clear();
 
-        var players = Object.FindObjectsOfType<Player.Player>(false)
+        var players = Object.FindObjectsOfType<Agents.Player>(false)
             .Where(p => p != null)
             .ToList();
 

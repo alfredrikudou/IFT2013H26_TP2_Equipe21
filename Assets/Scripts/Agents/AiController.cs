@@ -229,3 +229,191 @@
 //         
 //     }
 // }
+
+using System;
+using System.Collections;
+using System.Linq;
+using Pathfinding;
+using UnityEngine;
+
+namespace Agents
+{
+    public class AiController : Agent
+    {
+        [Header("Movement")] [SerializeField] private float _arrivalThreshold = 0.2f;
+        [SerializeField] private float _timeBetweenPathUpdates = 5f;
+        [SerializeField] private float _targetSelectDelay = 0.5f;
+
+        [Header("Combat")] [SerializeField] private float _aiAimToleranceDegrees = 10f;
+        [SerializeField] private float _aiMaxAimSeconds = 4f;
+        [SerializeField] private float _aiChargeMin = 0.72f;
+        [SerializeField] private float _aiChargeMax = 1f;
+        [SerializeField] private float _aiComfortShotRange = 14f;
+
+        private PathfindController _pathfinder;
+
+        private Vector3[] _path = Array.Empty<Vector3>();
+        private int _pathIndex = 0;
+        private bool _targetReached;
+        private Vector3 _currentTargetPosition;
+        private float _lastPathUpdateTime;
+
+        // ── Unity lifecycle ──────────────────────────────────────────────────
+
+        protected override void Awake()
+        {
+            base.Awake();
+            _pathfinder = FindObjectOfType<PathfindController>();
+        }
+
+        private void Start()
+        {
+            StartCoroutine(RunBehaviour());
+        }
+
+        protected override void FixedUpdate()
+        {
+            if (GamePauseState.IsPaused || (GameManager.Instance != null && GameManager.Instance.IsMatchOver))
+            {
+                StopMovement();
+                return;
+            }
+
+            FollowPath();
+        }
+
+        // ── Behaviour loop ───────────────────────────────────────────────────
+
+        private IEnumerator RunBehaviour()
+        {
+            while (true)
+            {
+                // Select target
+                PickTarget();
+                yield return new WaitForSeconds(_targetSelectDelay);
+
+                // Follow until close enough or has LOS
+                while (!IsCloseEnough() && !HasLineOfSight(_currentTargetPosition))
+                {
+                    if (_targetReached || (Time.time - _lastPathUpdateTime) > _timeBetweenPathUpdates)
+                        UpdatePath();
+                    yield return null;
+                }
+
+                // Aim
+                float aimDeadline = Time.time + _aiMaxAimSeconds;
+                while (Time.time < aimDeadline && !IsAimedAtTarget())
+                {
+                    AimAtTarget();
+                    yield return null;
+                }
+
+                // Charge
+                float charge = 0f;
+                float chargeGoal = UnityEngine.Random.Range(_aiChargeMin, _aiChargeMax);
+                while (charge < chargeGoal)
+                {
+                    charge += Time.deltaTime;
+                    yield return null;
+                }
+
+                // Fire
+                FireShot(Mathf.Clamp01(charge));
+            }
+        }
+
+        // ── Movement ─────────────────────────────────────────────────────────
+
+        private void FollowPath()
+        {
+            if (_targetReached || _path == null || _pathIndex >= _path.Length) return;
+
+            float remaining = moveSpeed * Time.fixedDeltaTime;
+
+            while (remaining > 0 && _pathIndex < _path.Length)
+            {
+                Vector3 waypoint = _path[_pathIndex];
+                float distToWaypoint = Vector3.Distance(transform.position, waypoint);
+
+                if (distToWaypoint <= remaining)
+                {
+                    _rb.MovePosition(waypoint);
+                    remaining -= distToWaypoint;
+                    _pathIndex++;
+                }
+                else
+                {
+                    _rb.MovePosition(Vector3.MoveTowards(transform.position, waypoint, remaining));
+                    remaining = 0;
+                }
+            }
+        }
+
+        // ── Targeting ────────────────────────────────────────────────────────
+
+        private void PickTarget()
+        {
+            var positions = GameManager.Instance.GetAgentsPositions()
+                .Where(x => (x - transform.position).sqrMagnitude > 1f)
+                .ToList();
+
+            if (!positions.Any()) return;
+
+            var losTarget = positions.FirstOrDefault(HasLineOfSight);
+            _currentTargetPosition = losTarget != default
+                ? losTarget
+                : positions.OrderBy(x => (x - transform.position).sqrMagnitude).First();
+
+            _targetReached = (_currentTargetPosition - transform.position).sqrMagnitude
+                             < _arrivalThreshold * _arrivalThreshold;
+            UpdatePath();
+        }
+
+        private void UpdatePath()
+        {
+            _lastPathUpdateTime = Time.time;
+            _pathIndex = 0;
+            _targetReached = false;
+            var path = _pathfinder.GetPath(transform.position, _currentTargetPosition);
+            _path = path != null ? path.ToArray() : Array.Empty<Vector3>();
+        }
+
+        // ── Checks ───────────────────────────────────────────────────────────
+
+        private bool IsCloseEnough() =>
+            (_currentTargetPosition - transform.position).sqrMagnitude
+            < _aiComfortShotRange * _aiComfortShotRange;
+
+        private bool HasLineOfSight(Vector3 target)
+        {
+            Vector3 direction = target - transform.position;
+            LayerMask mask = LayerMask.GetMask("Obstacle", "Wall");
+            return !Physics.Raycast(transform.position, direction.normalized, direction.magnitude, mask);
+        }
+
+        // ── Aim ──────────────────────────────────────────────────────────────
+
+        private void AimAtTarget()
+        {
+            if (Cannon == null || FirePoint == null) return;
+
+            Vector3 aimPoint = _currentTargetPosition + Vector3.up * 0.5f;
+            Vector3 dir = (aimPoint - FirePoint.position).normalized;
+            Transform parent = Cannon.parent != null ? Cannon.parent : transform;
+            Vector3 localDir = parent.InverseTransformDirection(dir);
+
+            float targetYaw = Mathf.Atan2(localDir.x, localDir.z) * Mathf.Rad2Deg;
+            float horiz = Mathf.Sqrt(localDir.x * localDir.x + localDir.z * localDir.z);
+            float targetPitch = -Mathf.Atan2(localDir.y, Mathf.Max(0.0001f, horiz)) * Mathf.Rad2Deg;
+
+            AimTowards(targetYaw, targetPitch);
+        }
+
+        private bool IsAimedAtTarget()
+        {
+            if (FirePoint == null) return false;
+            Vector3 desired = (_currentTargetPosition + Vector3.up * 0.5f - FirePoint.position).normalized;
+            return Vector3.Angle(FirePoint.forward, desired) <= _aiAimToleranceDegrees;
+        }
+    }
+}

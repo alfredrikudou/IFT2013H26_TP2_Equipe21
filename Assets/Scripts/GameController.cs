@@ -1,5 +1,5 @@
+using Agents;
 using Controls;
-using Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,7 +15,7 @@ public class GameController : MonoBehaviour
     [Header("Player Count")]
     [SerializeField] private int playerCount;
 
-    private Player.Player[] _players;
+    private Agents.Player[] _players;
 
     private void Awake()
     {
@@ -24,7 +24,7 @@ public class GameController : MonoBehaviour
 
     private void InitPlayers()
     {
-        _players = new Player.Player[playerCount];
+        _players = new Agents.Player[playerCount];
         for(int i = 0, j = 0; i < playerCount; i++)
             _players[i] = SpawnPlayer(playerPrefab, j++ % spawnPositions.Length, $"Player {i}");
     }
@@ -36,7 +36,7 @@ public class GameController : MonoBehaviour
                 Debug.Log($"{device.path} {device.name} {device.deviceId} {device.description}");
     }
 
-    private Player.Player SpawnPlayer(GameObject prefab, int spawnIndex, string playerName)
+    private Agents.Player SpawnPlayer(GameObject prefab, int spawnIndex, string playerName)
     {
         if (prefab == null)
         {
@@ -50,14 +50,14 @@ public class GameController : MonoBehaviour
 
         GameObject player = Instantiate(prefab, position, Quaternion.identity);
         player.name = playerName;
-        return player.GetComponent<Player.Player>();
+        return player.GetComponent<Agents.Player>();
     }
 
-    public PlayerControlDTO[] GetPlayersProfiles() => _players != null
+    public PlayerControlDto[] GetPlayersProfiles() => _players != null
         ? System.Array.ConvertAll(_players, p => p.GetProfileDTO())
-        : System.Array.Empty<PlayerControlDTO>();
+        : System.Array.Empty<PlayerControlDto>();
 
-    public void UpdatePlayerControl(PlayerControlDTO dto)
+    public void UpdatePlayerControl(PlayerControlDto dto)
     {
         foreach (var player in _players)
         {

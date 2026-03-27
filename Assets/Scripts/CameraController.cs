@@ -1,4 +1,3 @@
-using Player;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
@@ -50,7 +49,7 @@ public class CameraController : MonoBehaviour
             if (any) return;
         }
 
-        var players = FindObjectsOfType<Player.Player>(false);
+        var players = FindObjectsOfType<Agents.Player>(false);
         if (players == null || players.Length == 0)
         {
             Debug.LogWarning("[CameraController] Aucun Player trouvé : assignez m_Targets dans l'inspecteur ou ajoutez des joueurs dans la scène.");

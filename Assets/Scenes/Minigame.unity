@@ -527,7 +527,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurnManager
   spawnPlayersAtStart: 1
   numberOfPlayers: 2
-  numberOfAi: 1
+  numberOfAi: 0
   spawnPoints:
   - {fileID: 734245163}
   - {fileID: 1593155351}

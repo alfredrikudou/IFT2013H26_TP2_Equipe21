@@ -166,7 +166,7 @@ public class GameManager : MonoBehaviour
     
     private void SpawnAisFromConfig()
     {
-        int n = Mathf.Clamp(numberOfAi, MinAgent, MaxAgent);
+        int n = Mathf.Clamp(numberOfAi, MinAis, MaxAgent);
         if (n + numberOfPlayers > MaxAgent) n = Mathf.Max(MaxAgent - numberOfPlayers, 0);
         if (n + numberOfPlayers < MinAgent) n = MinAgent - numberOfPlayers;
         Debug.Log($"I'm going to spawn {n} ais");

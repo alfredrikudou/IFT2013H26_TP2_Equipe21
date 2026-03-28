@@ -172,3 +172,92 @@
     margin-bottom: 20px;
     -unity-text-align: upper-left;
 }
+
+/* Écran de chargement plein écran (splash + barre) */
+.loading-fullscreen-root {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    flex-grow: 1;
+}
+
+.loading-splash-bg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-image: url("project://database/Assets/Art/HomeBgWorms.png?fileID=2800000&guid=fcc49bc25f4f63140b5b0fd16fc68cd8&type=3#HomeBgWorms");
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.loading-dim-veil {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(10, 12, 22, 0.55);
+}
+
+.loading-center-stack {
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    align-self: stretch;
+    padding: 48px;
+}
+
+.loading-status-label {
+    margin-bottom: 12px;
+}
+
+.loading-detail-label {
+    font-size: 22px;
+    color: rgb(220, 230, 245);
+    white-space: normal;
+    max-width: 720px;
+    -unity-text-align: middle-center;
+    margin-bottom: 24px;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.loading-progress-track {
+    position: relative;
+    flex-direction: row;
+    align-items: stretch;
+    width: 72%;
+    max-width: 720px;
+    min-width: 280px;
+    height: 28px;
+    background-color: rgba(0, 0, 0, 0.45);
+    border-radius: 14px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.35);
+    overflow: hidden;
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.loading-progress-fill {
+    height: 100%;
+    width: 0;
+    flex-shrink: 0;
+    flex-grow: 0;
+    background-color: rgb(100, 210, 130);
+    border-radius: 12px;
+}
+
+.loading-percent-label {
+    -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
+    font-size: 36px;
+    color: rgb(255, 255, 255);
+    text-shadow: 2px 2px 0 rgb(0, 0, 0);
+    -unity-text-align: middle-center;
+}

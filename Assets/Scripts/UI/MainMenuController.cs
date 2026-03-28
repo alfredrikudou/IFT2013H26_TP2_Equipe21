@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,11 +14,21 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private string gameSceneName = "Minigame";
     [Tooltip("Texte multiligne affiché dans Crédits (noms, etc.). La version est ajoutée automatiquement.")]
     [SerializeField] [TextArea(3, 12)] private string creditsBody = "IFT2013 — TP2\nÉquipe 21";
+    [Tooltip("Optionnel : image plein écran pendant le chargement (sinon même visuel que l’arrière-plan du menu).")]
+    [SerializeField] private Texture2D loadingSplashOverride;
+    [Tooltip("Durée minimale d’affichage du splash (temps réel), même si la scène est déjà chargée.")]
+    [SerializeField] [Min(0f)] private float minimumSplashDurationSeconds = 5f;
 
     private UIDocument _document;
     private VisualElement _mainPanel;
     private VisualElement _setupPanel;
     private VisualElement _creditsPanel;
+    private VisualElement _loadingPanel;
+    private VisualElement _loadingSplashBg;
+    private VisualElement _loadingProgressFill;
+    private Label _loadingStatusLabel;
+    private Label _loadingDetailLabel;
+    private Label _loadingPercentLabel;
     private DropdownField _playerCountDropdown;
     private readonly Toggle[] _aiToggles = new Toggle[4];
     private readonly VisualElement[] _playerRows = new VisualElement[4];
@@ -32,6 +43,15 @@ public class MainMenuController : MonoBehaviour
         _mainPanel = root.Q<VisualElement>("main-menu__panel");
         _setupPanel = root.Q<VisualElement>("setup-panel");
         _creditsPanel = root.Q<VisualElement>("credits-panel");
+        _loadingPanel = root.Q<VisualElement>("loading-panel");
+        _loadingSplashBg = root.Q<VisualElement>("loading-splash__bg");
+        _loadingProgressFill = root.Q<VisualElement>("loading-progress__fill");
+        _loadingStatusLabel = root.Q<Label>("loading-status__label");
+        _loadingDetailLabel = root.Q<Label>("loading-detail__label");
+        _loadingPercentLabel = root.Q<Label>("loading-percent__label");
+
+        if (loadingSplashOverride != null && _loadingSplashBg != null)
+            _loadingSplashBg.style.backgroundImage = new StyleBackground(loadingSplashOverride);
 
         _playerCountDropdown = root.Q<DropdownField>("player-count__dropdown");
         if (_playerCountDropdown != null)
@@ -151,8 +171,96 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
-        // Sinon : changement de scène (le menu est détruit avec l’ancienne scène).
-        SceneManager.LoadScene(gameSceneName);
+        // Sinon : chargement asynchrone (splash / attente jusqu’à ce que la scène soit prête).
+        StartCoroutine(LoadGameSceneAsync(gameSceneName));
+    }
+
+    private IEnumerator LoadGameSceneAsync(string sceneName)
+    {
+        float splashStart = Time.unscaledTime;
+        SetLoadingVisible(true);
+        SetLoadingProgressUI(0f);
+        SetLoadingHeadline("Préparation du chargement");
+        SetLoadingDetail(
+            "Demande asynchrone au moteur Unity : la scène, ses GameObjects, composants, maillages, matériaux et colliders seront instanciés en mémoire.");
+
+        var op = SceneManager.LoadSceneAsync(sceneName);
+        if (op == null)
+        {
+            Debug.LogError($"[MainMenuController] Impossible de charger la scène « {sceneName} » (nom ou Build Settings).");
+            SetLoadingVisible(false);
+            yield break;
+        }
+
+        op.allowSceneActivation = false;
+
+        // Phase 1 : flux Unity (progress 0 → 0,9 tant que la scène n’est pas prête à s’activer).
+        while (op.progress < 0.9f)
+        {
+            float async01 = Mathf.Clamp01(op.progress / 0.9f);
+            SetLoadingProgressUI(async01 * 0.88f);
+            SetLoadingHeadline($"Chargement de « {sceneName} »");
+            SetLoadingDetail(
+                $"Étape : désérialisation et intégration des ressources de la scène (hiérarchie, prefabs référencés, assets liés). " +
+                $"Progression interne du chargeur : {Mathf.RoundToInt(async01 * 100)} %.");
+            yield return null;
+        }
+
+        float loadReadyTime = Time.unscaledTime;
+
+        // Phase 2 : respecter la durée minimale du splash (temps réel, indépendant de timeScale).
+        SetLoadingHeadline("Scène prête en mémoire");
+        while (Time.unscaledTime - splashStart < minimumSplashDurationSeconds)
+        {
+            float elapsed = Time.unscaledTime - splashStart;
+            float remaining = Mathf.Max(0f, minimumSplashDurationSeconds - elapsed);
+            float sinceLoadReady = Time.unscaledTime - loadReadyTime;
+            float padWindow = Mathf.Max(0.01f, minimumSplashDurationSeconds - (loadReadyTime - splashStart));
+            float pad01 = Mathf.Clamp01(sinceLoadReady / padWindow);
+            SetLoadingProgressUI(Mathf.Lerp(0.88f, 1f, pad01));
+            SetLoadingDetail(
+                "Étape : synchronisation affichage — la scène est chargée mais le lancement attend encore " +
+                $"{remaining:F1} s (durée minimale du splash). Ensuite, activation de la nouvelle scène.");
+            yield return null;
+        }
+
+        SetLoadingProgressUI(1f);
+        SetLoadingHeadline("Lancement");
+        SetLoadingDetail("Activation de la scène : passage au jeu.");
+        op.allowSceneActivation = true;
+        yield return op;
+    }
+
+    private void SetLoadingHeadline(string text)
+    {
+        if (_loadingStatusLabel != null)
+            _loadingStatusLabel.text = text;
+    }
+
+    private void SetLoadingDetail(string text)
+    {
+        if (_loadingDetailLabel != null)
+            _loadingDetailLabel.text = text;
+    }
+
+    private void SetLoadingProgressUI(float progress01)
+    {
+        progress01 = Mathf.Clamp01(progress01);
+        if (_loadingProgressFill != null)
+            _loadingProgressFill.style.width = Length.Percent(progress01 * 100f);
+        if (_loadingPercentLabel != null)
+            _loadingPercentLabel.text = $"{Mathf.RoundToInt(progress01 * 100f)} %";
+    }
+
+    private void SetLoadingVisible(bool visible)
+    {
+        if (_loadingPanel == null) return;
+        _loadingPanel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        if (!visible)
+        {
+            SetLoadingProgressUI(0f);
+            SetLoadingDetail(string.Empty);
+        }
     }
 
     /// <summary>Masque le UIDocument et désactive ce GameObject pour ne plus bloquer le jeu.</summary>

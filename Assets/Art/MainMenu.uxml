@@ -48,5 +48,17 @@
                 <ui:Button text="Retour" name="credits-back__button" class="menuRegularButton menu-button-small"/>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="loading-panel" class="loading-fullscreen-root" style="display: none;">
+            <ui:VisualElement name="loading-splash__bg" class="loading-splash-bg"/>
+            <ui:VisualElement class="loading-dim-veil"/>
+            <ui:VisualElement class="loading-center-stack">
+                <ui:Label text="Chargement de la partie…" name="loading-status__label" class="menu-title-small loading-status-label"/>
+                <ui:Label text="" name="loading-detail__label" class="loading-detail-label"/>
+                <ui:VisualElement name="loading-progress__track" class="loading-progress-track">
+                    <ui:VisualElement name="loading-progress__fill" class="loading-progress-fill"/>
+                </ui:VisualElement>
+                <ui:Label text="0 %" name="loading-percent__label" class="loading-percent-label"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -203,7 +203,7 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < n; i++)
         {
             Debug.Log("Creating ai");
-            Transform sp = spawnPoints[i];
+            Transform sp = spawnPoints[i + numberOfPlayers];
             var go = Instantiate(aiPrefab, sp.position, sp.rotation);
             var ai = go != null ? go.GetComponent<Agents.AiController>() : null;
             if (ai != null)

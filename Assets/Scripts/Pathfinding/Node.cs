@@ -15,9 +15,11 @@ namespace Pathfinding
 
         public Node(Vector2Int gridPos, Vector3 worldPos, bool walkable)
         {
-            GridPos  = gridPos;
+            GridPos = gridPos;
             WorldPos = worldPos;
             Walkable = walkable;
+            GCost = float.MaxValue;
+            HCost = 0f;
         }
     }
 }

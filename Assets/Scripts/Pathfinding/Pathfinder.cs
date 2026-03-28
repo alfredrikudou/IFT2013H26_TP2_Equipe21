@@ -18,11 +18,20 @@ namespace Pathfinding
             Node start = _grid.NodeFromWorldPoint(startWorld);
             Node target = _grid.NodeFromWorldPoint(targetWorld);
 
-            var open = new List<Node> { start };
+            ResetSearchState();
+
+            var open = new List<Node>();
             var closed = new HashSet<Node>();
+
+            if (!start.Walkable || !target.Walkable)
+                return null;
+
+            if (start == target)
+                return new List<Vector3> { targetWorld };
 
             start.GCost = 0;
             start.HCost = Heuristic(start, target);
+            open.Add(start);
 
             while (open.Count > 0)
             {
@@ -53,6 +62,25 @@ namespace Pathfinding
             return null;
         }
 
+        /// <summary>
+        /// Indispensable : les mêmes instances <see cref="Node"/> sont réutilisées à chaque recherche.
+        /// Sans reset, l’A* est corrompu et les chemins échouent (IA immobile).
+        /// </summary>
+        private void ResetSearchState()
+        {
+            var g = _grid.Grid;
+            int w = g.GetLength(0);
+            int h = g.GetLength(1);
+            for (int x = 0; x < w; x++)
+            for (int z = 0; z < h; z++)
+            {
+                Node n = g[x, z];
+                n.GCost = float.MaxValue;
+                n.HCost = 0f;
+                n.Parent = null;
+            }
+        }
+
         private Node GetLowestFCost(List<Node> nodes)
         {
             Node best = nodes[0];
@@ -73,14 +101,17 @@ namespace Pathfinding
         {
             var path = new List<Node>();
             Node current = end;
-            while (current != start)
+            while (current != start && current != null)
             {
                 path.Add(current);
                 current = current.Parent;
             }
 
             path.Reverse();
-            return path.ConvertAll(n => n.WorldPos);
+            var world = path.ConvertAll(n => n.WorldPos);
+            if (world.Count == 0)
+                world.Add(end.WorldPos);
+            return world;
         }
     }
 }

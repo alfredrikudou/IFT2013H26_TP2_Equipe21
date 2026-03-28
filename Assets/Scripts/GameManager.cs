@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Agents;
-using TMPro;
 using UI;
 using UnityEngine;
 
@@ -14,37 +12,18 @@ public class GameManager : MonoBehaviour
     public const int MaxPlayers = 4;
     public const int MinAgent = 2;
     public const int MaxAgent = 4;
-    public const int MinAis = 0;
-    public const int MaxAis = 4;
 
-    [Header("Spawn (2 à 4 joueurs)")]
-    [Tooltip("Si activé, les joueurs présents dans la scène sont retirés et des prefabs sont instanciés aux positions indiquées.")]
+    [Header("Spawn")]
+    [Tooltip("Si activé, supprime les agents présents et respawn selon le menu (ou 2 humains par défaut en éditeur sans menu).")]
     [SerializeField] private bool spawnPlayersAtStart = true;
-    [Tooltip("Nombre de joueurs pour cette partie (entre 0 et 4).")]
-    [SerializeField] [Range(MinPlayers, MaxPlayers)] private int numberOfPlayers = 2;
-    [Tooltip("Nombre de ai pour cette partie (entre 0 et 4).")]
-    [SerializeField] [Range(MinAis, MaxAis)] private int numberOfAi = 0;
-    [Tooltip("Points d’apparition (utiliser les N premiers selon le nombre de joueurs).")]
     [SerializeField] private Transform[] spawnPoints = new Transform[0];
-    [Tooltip("Une variante de prefab par slot (1 à 4). Le joueur i utilise le slot i (ou le premier prefab non-null si le slot est vide).")]
-    
+
     [Header("Prefabs")]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject aiPrefab;
 
-    [Header("Turn Rules")]
-    [SerializeField] private float maxProjectileLifeSeconds = 6f;
-    [SerializeField] private float postShotDelaySeconds = 0.4f;
-
-    [Header("UI joueur actif")]
-    [SerializeField] private TextMeshProUGUI activePlayerLabel;
-    [SerializeField] private string activePlayerFormat = "Joueur actif : {0}";
-    [SerializeField] private Color activeColor = Color.white;
-    [SerializeField] private Color waitingProjectileColor = new Color(1f, 0.7f, 0.3f);
-
     [Header("Fin de partie")]
     [SerializeField] private string winnerFormat = "{0} remporte la partie !";
-    [SerializeField] private Color winnerColor = new Color(0.4f, 1f, 0.5f);
     [SerializeField] private string tieMessage = "Partie terminée — plus aucun survivant";
 
     private readonly List<Agents.Player> _players = new();
@@ -61,6 +40,7 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
     }
 
@@ -68,11 +48,10 @@ public class GameManager : MonoBehaviour
     {
         _matchOver = false;
         if (spawnPlayersAtStart)
-            SpawnPlayersFromConfig();
-        SpawnAisFromConfig();
+            SpawnAllAgents();
         SetupViewports();
     }
-    
+
     private void SetupViewports()
     {
         switch (_agents.Count)
@@ -82,120 +61,133 @@ public class GameManager : MonoBehaviour
                 break;
 
             case 2:
-                _agents[0].SetViewport(new Rect(0f,   0f, 0.5f, 1f));
+                _agents[0].SetViewport(new Rect(0f, 0f, 0.5f, 1f));
                 _agents[1].SetViewport(new Rect(0.5f, 0f, 0.5f, 1f));
                 break;
 
             case 3:
-                _agents[0].SetViewport(new Rect(0f,   0.5f, 0.5f, 0.5f));
+                _agents[0].SetViewport(new Rect(0f, 0.5f, 0.5f, 0.5f));
                 _agents[1].SetViewport(new Rect(0.5f, 0.5f, 0.5f, 0.5f));
-                _agents[2].SetViewport(new Rect(0f,   0f,   0.5f, 0.5f));
-                Camera.main.rect    = new Rect(0.5f, 0f, 0.5f, 0.5f);
+                _agents[2].SetViewport(new Rect(0f, 0f, 0.5f, 0.5f));
+                Camera.main.rect = new Rect(0.5f, 0f, 0.5f, 0.5f);
                 Camera.main.enabled = true;
                 break;
 
             case 4:
-                _agents[0].SetViewport(new Rect(0f,   0.5f, 0.5f, 0.5f));
+                _agents[0].SetViewport(new Rect(0f, 0.5f, 0.5f, 0.5f));
                 _agents[1].SetViewport(new Rect(0.5f, 0.5f, 0.5f, 0.5f));
-                _agents[2].SetViewport(new Rect(0f,   0f,   0.5f, 0.5f));
-                _agents[3].SetViewport(new Rect(0.5f, 0f,   0.5f, 0.5f));
+                _agents[2].SetViewport(new Rect(0f, 0f, 0.5f, 0.5f));
+                _agents[3].SetViewport(new Rect(0.5f, 0f, 0.5f, 0.5f));
                 break;
         }
     }
 
-#if UNITY_EDITOR
-    private void OnValidate()
+    private void SpawnAllAgents()
     {
-        numberOfPlayers = Mathf.Clamp(numberOfPlayers, MinPlayers, MaxPlayers);
-    }
-#endif
+        _players.Clear();
+        _ais.Clear();
+        _agents.Clear();
 
-    /// <summary>Retire les joueurs de la scène et instancie les variantes aux spawn points (noms Player0…).</summary>
-    private void SpawnPlayersFromConfig()
-    {
-        int n = Mathf.Clamp(GameSessionConfig.GetEffectivePlayerCount(numberOfPlayers), MinPlayers, MaxPlayers);
-
-        if (spawnPoints == null || spawnPoints.Length < n)
-        {
-            Debug.LogError($"[TurnManager] Il faut au moins {n} spawn points (actuellement {spawnPoints?.Length ?? 0}).");
-            return;
-        }
-
-        for (int i = 0; i < n; i++)
-        {
-            if (spawnPoints[i] == null)
-            {
-                Debug.LogError($"[TurnManager] Spawn point {i} est vide.");
-                return;
-            }
-        }
-
-        if (playerPrefab == null)
-        {
-            Debug.LogError("[TurnManager] Aucun prefab de worm / joueur dans les variantes.");
-            return;
-        }
-
-        var existing = FindObjectsOfType<Agents.Player>(true);
-        foreach (var p in existing)
-        {
-            if (p != null && p.gameObject != null)
-                Destroy(p.gameObject);
-        }
+        foreach (var p in FindObjectsByType<Agents.Player>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (p != null) Destroy(p.gameObject);
+        foreach (var a in FindObjectsByType<Agents.AiController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (a != null) Destroy(a.gameObject);
 
         Agents.Agent.ResetStaticNaming();
 
-        for (int i = 0; i < n; i++)
-        {
-            Transform sp = spawnPoints[i];
-            var go = Instantiate(playerPrefab, sp.position, sp.rotation);
-            var player = go != null ? go.GetComponent<Agents.Player>() : null;
-            if (player != null)
-            {
-                player.SetSlotIndex(i);
-                if (GameSessionConfig.LoadedFromMenu)
-                    player.SetName(GameSessionConfig.GetPlayerNameForSlot(i));
-                _players.Add(player);
-                _agents.Add(player);
-            }
-        }
+        if (GameSessionConfig.LoadedFromMenu)
+            SpawnAgentsFromMenuSession();
+        else
+            SpawnEditorDefaultAgents();
 
-        foreach (var cam in FindObjectsOfType<CameraController>(false))
+        foreach (var cam in FindObjectsByType<CameraController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
             cam.RequestTargetsRefreshFromPlayers();
     }
-    
-    private void SpawnAisFromConfig()
+
+    /// <summary>Slots humains / IA et noms : tout vient du menu principal.</summary>
+    private void SpawnAgentsFromMenuSession()
     {
-        int n = Mathf.Clamp(numberOfAi, MinAis, MaxAgent);
-        if (n + numberOfPlayers > MaxAgent) n = Mathf.Max(MaxAgent - numberOfPlayers, 0);
-        if (n + numberOfPlayers < MinAgent) n = MinAgent - numberOfPlayers;
-        Debug.Log($"I'm going to spawn {n} ais");
-        if (spawnPoints == null || spawnPoints.Length < n)
+        int n = Mathf.Clamp(GameSessionConfig.PlayerCount, MinAgent, MaxPlayers);
+        if (playerPrefab == null || aiPrefab == null)
         {
-            Debug.LogError($"[TurnManager] Il faut au moins {n} spawn points (actuellement {spawnPoints?.Length ?? 0}).");
+            Debug.LogError("[GameManager] playerPrefab et aiPrefab sont requis.");
             return;
         }
 
-        for (int i = numberOfPlayers; i < n + numberOfPlayers; i++)
+        if (!ValidateSpawnPoints(n))
+            return;
+
+        for (int slot = 0; slot < n; slot++)
+        {
+            if (GameSessionConfig.IsComputerControlledSlot(slot))
+                TrySpawnAiAt(spawnPoints[slot], slot);
+            else
+                TrySpawnPlayerAt(spawnPoints[slot], slot);
+        }
+    }
+
+    /// <summary>Lancer Minigame sans passer par le menu : 2 humains (tests éditeur).</summary>
+    private void SpawnEditorDefaultAgents()
+    {
+        int n = MinAgent;
+        if (playerPrefab == null)
+        {
+            Debug.LogError("[GameManager] playerPrefab requis.");
+            return;
+        }
+
+        if (!ValidateSpawnPoints(n))
+            return;
+
+        for (int i = 0; i < n; i++)
+            TrySpawnPlayerAt(spawnPoints[i], i);
+    }
+
+    private bool ValidateSpawnPoints(int requiredCount)
+    {
+        if (spawnPoints == null || spawnPoints.Length < requiredCount)
+        {
+            Debug.LogError($"[GameManager] Il faut au moins {requiredCount} spawn points (actuellement {spawnPoints?.Length ?? 0}).");
+            return false;
+        }
+
+        for (int i = 0; i < requiredCount; i++)
         {
             if (spawnPoints[i] == null)
             {
-                Debug.LogError($"[TurnManager] Spawn point {i} est vide.");
-                return;
+                Debug.LogError($"[GameManager] Spawn point {i} est vide.");
+                return false;
             }
         }
 
-        if (aiPrefab == null)
+        return true;
+    }
+
+    private void TrySpawnPlayerAt(Transform sp, int slotIndex)
+    {
+        var go = Instantiate(playerPrefab, sp.position, sp.rotation);
+        var player = go != null ? go.GetComponent<Agents.Player>() : null;
+        if (player == null)
         {
-            Debug.LogError("[TurnManager] Aucun prefab de worm / ai dans les variantes.");
+            Debug.LogError("[GameManager] playerPrefab sans Agents.Player.");
             return;
         }
 
-        var existing = FindObjectsOfType<Agents.AiController>(true);
-        foreach (var p in existing)
+        player.SetSlotIndex(slotIndex);
+        if (GameSessionConfig.LoadedFromMenu)
+            player.SetName(GameSessionConfig.GetPlayerNameForSlot(slotIndex));
+        _players.Add(player);
+        _agents.Add(player);
+    }
+
+    private void TrySpawnAiAt(Transform sp, int slotIndex)
+    {
+        var go = Instantiate(aiPrefab, sp.position, sp.rotation);
+        var ai = go != null ? go.GetComponent<Agents.AiController>() : null;
+        if (ai == null)
         {
-            if (p != null && p.gameObject != null)
-                Destroy(p.gameObject);
+            Debug.LogError("[GameManager] aiPrefab sans Agents.AiController.");
+            return;
         }
 
         Agents.Agent.ResetStaticNaming();
@@ -228,25 +220,23 @@ public class GameManager : MonoBehaviour
 
         if (alive.Count <= 1)
         {
-            if (alive.Count == 0) EndMatch("The game ended in a tie!");
-            else EndMatch($"{alive[0].GetName()} won the game!");
+            if (alive.Count == 0) EndMatch(tieMessage);
+            else EndMatch(string.Format(winnerFormat, alive[0].GetName()));
         }
     }
 
-    private void EndMatch(string endMessage = "This game ended!")
+    private void EndMatch(string endMessage)
     {
         if (_matchOver) return;
         _matchOver = true;
 
-        // StopAllCoroutines();
-
-        FindFirstObjectByType<EndGameUIEvents>().EndGame(endMessage);
+        FindFirstObjectByType<EndGameUIEvents>()?.EndGame(endMessage);
     }
-    
+
     public PlayerControlDto[] GetPlayersProfiles() => _players != null
         ? _players.Select(p => p.GetProfileDTO()).ToArray()
         : System.Array.Empty<PlayerControlDto>();
-    
+
     public void UpdatePlayerControl(PlayerControlDto dto)
     {
         foreach (var player in _players)
@@ -259,5 +249,18 @@ public class GameManager : MonoBehaviour
     public List<Vector3> GetAgentsPositions()
     {
         return _agents.ConvertAll(p => p.transform.position);
+    }
+
+    /// <summary>
+    /// Positions des adversaires encore en vie (exclut <paramref name="self"/>).
+    /// À utiliser pour l’IA : un filtre par distance exclurait toutes les cibles si plusieurs agents sont au même endroit.
+    /// </summary>
+    public List<Vector3> GetOtherAliveAgentPositions(Agents.Agent self)
+    {
+        if (self == null) return new List<Vector3>();
+        return _agents
+            .Where(a => a != null && a != self && !a.IsDead)
+            .Select(a => a.transform.position)
+            .ToList();
     }
 }

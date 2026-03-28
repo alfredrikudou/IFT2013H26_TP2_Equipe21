@@ -1,237 +1,5 @@
-// using System;
-// using System.Collections;
-// using System.Collections.Generic;
-// using System.Linq;
-// using Pathfinding;
-// using UnityEngine;
-//
-// namespace AI
-// {
-//     public class AiController : MonoBehaviour
-//     {
-//         [Header("IA")]
-//         [SerializeField] private float _aiAimToleranceDegrees = 10f;
-//         [SerializeField] private float _aiMaxAimSeconds = 4f;
-//         [SerializeField] private float _aiChargeMin = 0.72f;
-//         [SerializeField] private float _aiChargeMax = 1f;
-//         
-//         [Tooltip("Distance horizontale max pour commencer à charger / tirer. Au-delà, l’IA avance vers la cible (portée « confortable »).")]
-//         [SerializeField] private float _aiComfortShotRange = 14f;
-//         
-//         [Tooltip("Dès que la cible est plus loin que ça (horizontal), l’IA marche vers elle (même proche du joueur).")]
-//         [SerializeField] private float _aiAlwaysMoveIfFartherThan = 2.5f;
-//         
-//         [Tooltip("Petit déplacement latéral pour ne pas rester statique quand la cible est à portée.")]
-//         [SerializeField] private float _aiStrafeAmplitude = 0.35f;
-//         
-//         private enum AiPhase { Idle, Aim, Charge }
-//         private AiPhase _aiPhase = AiPhase.Idle;
-//         private Player.Player _aiTarget;
-//         private float _aiChargeGoal;
-//         private bool _aiNoTargetShotDone;
-//         private float _aiAimStartTime;
-//
-//         [SerializeField] private PathfindController _pathfinder;
-//
-//         [SerializeField] private float _timeBetweenTargetPositionUpdates = 5f; // seconds
-//         private float _lastUpdateTargetTime;
-//         private bool targetReached = false;
-//         private Vector3 _currentTargetPosition;
-//         private Vector3[] _path; // nodes / position to reach the target
-//         private int _pathIndex = 0;
-//
-//         private Rigidbody _rb;
-//         
-//         private void Start()
-//         {
-//             _rb = GetComponent<Rigidbody>();
-//             StartCoroutine(RunBehaviour());
-//         }
-//
-//         private IEnumerator RunBehaviour()
-//         {
-//             while (true)
-//             {
-//                 if(targetReached || (Time.time - _lastUpdateTargetTime) > _timeBetweenTargetPositionUpdates)
-//                     UpdateMoveSet();
-//                 yield return new WaitForSeconds(_targetSelectDelay);
-//
-//                 // Follow target
-//                 while (!IsCloseEnough())
-//                 {
-//                     MoveTowardsTarget();
-//                     yield return null;
-//                 }
-//
-//                 // Aim
-//                 yield return null;
-//
-//                 // Charge
-//                 yield return null;
-//
-//                 // Fire
-//             }
-//         }
-//         
-//         private void FixedUpdate()
-//         {
-//             if (targetReached || _path == null || _pathIndex >= _path.Length) return;
-//
-//             Vector3 waypoint  = _path[_waypointIndex];
-//             Vector3 direction = (waypoint - transform.position).normalized;
-//
-//             _rb.linearVelocity = new Vector3(direction.x * _moveSpeed, _rb.linearVelocity.y, direction.z * _moveSpeed);
-//
-//             if (Vector3.Distance(transform.position, waypoint) < _arrivalThreshold)
-//                 _waypointIndex++;
-//         }
-//
-//
-//         public void CheckLOS()
-//         {
-//             var positions = GameManager.Instance.GetPlayersPositions().Where(x => (x - gameObject.transform.position).sqrMagnitude > 1f).ToList();
-//             if (!positions.Any(HasLineOfSight)) return;
-//             _lastUpdateTargetTime = Time.time;
-//             _currentTargetPosition = positions.First(HasLineOfSight);
-//             targetReached = true;
-//             _path = Array.Empty<Vector3>();
-//             _pathIndex = 0;
-//         }
-//         private void UpdateMoveSet()
-//         {
-//             var positions = GameManager.Instance.GetPlayersPositions().Where(x => (x - gameObject.transform.position).sqrMagnitude > 1f).ToList();
-//             var targetPosition = positions.FirstOrDefault();
-//             foreach (var position in positions)
-//             {
-//                 if((position - gameObject.transform.position).sqrMagnitude > (targetPosition - gameObject.transform.position).sqrMagnitude)
-//                     targetPosition = position;
-//             }
-//             _currentTargetPosition = targetPosition;
-//             targetReached = (targetPosition - gameObject.transform.position).sqrMagnitude < 0.1;
-//             _pathIndex = 0;
-//             _path =  _pathfinder.GetPath(gameObject.transform.position, _currentTargetPosition).ToArray();
-//         }
-//         
-//         private bool HasLineOfSight(Vector3 target)
-//         {
-//             Vector3 direction = target - transform.position;
-//             if (direction.sqrMagnitude > _aiComfortShotRange * _aiComfortShotRange) return false;
-//             LayerMask mask = LayerMask.GetMask("Obstacle", "Wall");
-//             return !Physics.Raycast(transform.position, direction.normalized, direction.magnitude, mask);
-//         }
-//         
-//         private bool AiIsAimedAtTarget()
-//         {
-//             Vector3 aimPoint = _aiTarget.transform.position + Vector3.up * 0.5f;
-//             Vector3 desired = (aimPoint - _firePoint.position).normalized;
-//             return Vector3.Angle(_firePoint.forward, desired) <= _aiAimToleranceDegrees;
-//         }
-//
-//         /// <summary>IA : priorité au plus proche (meilleure chance de toucher), puis visée + tir chargé.</summary>
-//         private void RunComputerTurn()
-//         {
-//             if (_projectilePrefab == null || _cannon == null)
-//                 return;
-//
-//             EnsureFirePoint();
-//             if (_firePoint == null) return;
-//
-//             if (_aiTarget == null || _aiTarget.IsDead)
-//                 PickAiTarget();
-//
-//             if (_aiTarget == null)
-//             {
-//                 _moveInput = Vector2.zero;
-//                 if (!_aiNoTargetShotDone)
-//                 {
-//                     _aiNoTargetShotDone = true;
-//                     FireShot(0.35f);
-//                 }
-//                 return;
-//             }
-//
-//             switch (_aiPhase)
-//             {
-//                 case AiPhase.Aim:
-//                     AiAimAtTarget();
-//                     Vector3 flat = _aiTarget.transform.position - transform.position;
-//                     flat.y = 0f;
-//                     float distH = flat.magnitude;
-//                     if (distH > 0.01f)
-//                         flat /= distH;
-//
-//                     // Marche vers la cible si un peu loin ; strafe léger si déjà à portée pour ne pas rester figé.
-//                     if (distH > _aiAlwaysMoveIfFartherThan)
-//                         _moveInput = new Vector2(flat.x, flat.z);
-//                     else if (_aiStrafeAmplitude > 0f)
-//                     {
-//                         Vector3 side = Vector3.Cross(Vector3.up, flat);
-//                         if (side.sqrMagnitude > 0.0001f)
-//                         {
-//                             side.Normalize();
-//                             float w = Mathf.Sin(Time.time * 2.1f) * _aiStrafeAmplitude;
-//                             _moveInput = new Vector2(side.x, side.z) * w;
-//                         }
-//                         else
-//                             _moveInput = Vector2.zero;
-//                     }
-//                     else
-//                         _moveInput = Vector2.zero;
-//
-//                     bool aimReady = Time.time - _aiAimStartTime >= _aiMaxAimSeconds || AiIsAimedAtTarget();
-//                     bool inComfortRange = distH <= _aiComfortShotRange;
-//                     bool desperateShot = Time.time - _aiAimStartTime >= _aiMaxAimSeconds * 1.75f;
-//                     if (aimReady && (inComfortRange || desperateShot))
-//                         _aiPhase = AiPhase.Charge;
-//                     break;
-//
-//                 case AiPhase.Charge:
-//                     _moveInput = Vector2.zero;
-//                     _charging = true;
-//                     _charge01 += Time.deltaTime / Mathf.Max(0.01f, _chargeSecondsToMax);
-//                     _charge01 = Mathf.Clamp01(_charge01);
-//                     UpdatePowerUI();
-//                     if (_charge01 >= _aiChargeGoal)
-//                     {
-//                         FireShot(_charge01);
-//                         _charging = false;
-//                         _charge01 = 0f;
-//                         UpdatePowerUI();
-//                         _aiPhase = AiPhase.Idle;
-//                     }
-//                     break;
-//
-//                 default:
-//                     _moveInput = Vector2.zero;
-//                     break;
-//             }
-//         }
-//
-//         /// <summary>Même convention que le joueur : Euler(pitch, yaw, 0) sur le canon (évite un blocage si LookRotation ≠ axe du mesh).</summary>
-//         private void AiAimAtTarget()
-//         {
-//             Vector3 aimPoint = _aiTarget.transform.position + Vector3.up * 0.5f;
-//             Vector3 dir = (aimPoint - _firePoint.position).normalized;
-//             Transform parent = _cannon.parent != null ? _cannon.parent : transform;
-//             Vector3 localDir = parent.InverseTransformDirection(dir);
-//             float targetYaw = Mathf.Atan2(localDir.x, localDir.z) * Mathf.Rad2Deg;
-//             float horiz = Mathf.Sqrt(localDir.x * localDir.x + localDir.z * localDir.z);
-//             float targetPitch = -Mathf.Atan2(localDir.y, Mathf.Max(0.0001f, horiz)) * Mathf.Rad2Deg;
-//             targetPitch = Mathf.Clamp(targetPitch, _pitchMin, _pitchMax);
-//
-//             float dt = Time.deltaTime;
-//             _aimYaw = Mathf.MoveTowardsAngle(_aimYaw, targetYaw, _aimSpeed * dt);
-//             _aimPitch = Mathf.MoveTowardsAngle(_aimPitch, targetPitch, _aimSpeed * dt);
-//             _aimPitch = Mathf.Clamp(_aimPitch, _pitchMin, _pitchMax);
-//             _cannon.localRotation = Quaternion.Euler(_aimPitch, _aimYaw, 0f);
-//         }
-//
-//         
-//     }
-// }
-
-using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Pathfinding;
 using UnityEngine;
@@ -240,11 +8,22 @@ namespace Agents
 {
     public class AiController : Agent
     {
-        [Header("Movement")] [SerializeField] private float _arrivalThreshold = 0.2f;
-        [SerializeField] private float _timeBetweenPathUpdates = 5f;
-        [SerializeField] private float _targetSelectDelay = 0.5f;
+        [Header("Pathfinding")]
+        [SerializeField] private GameObject pathfindingObject;
+        [SerializeField] private string pathfindingSingletonName = "PathfindController";
 
-        [Header("Combat")] [SerializeField] private float _aiAimToleranceDegrees = 10f;
+        [Header("Mouvement")]
+        [SerializeField] private float _arrivalThreshold = 0.45f;
+        [SerializeField] private float _timeBetweenPathUpdates = 1.25f;
+        [SerializeField] private float _targetSelectDelay = 0.35f;
+        [SerializeField] private bool useHorizontalVelocityForMovement = true;
+        [Tooltip("Lissage de la vélocité horizontale (évite les à-coups).")]
+        [SerializeField] private float velocitySmoothTime = 0.14f;
+        [Tooltip("Rotation douce du corps vers la direction de marche (XZ).")]
+        [SerializeField] private float bodyTurnSpeed = 280f;
+
+        [Header("Combat")]
+        [SerializeField] private float _aiAimToleranceDegrees = 10f;
         [SerializeField] private float _aiMaxAimSeconds = 4f;
         [SerializeField] private float _aiChargeMin = 0.72f;
         [SerializeField] private float _aiChargeMax = 1f;
@@ -252,18 +31,46 @@ namespace Agents
 
         private PathfindController _pathfinder;
 
-        private Vector3[] _path = Array.Empty<Vector3>();
-        private int _pathIndex = 0;
+        private Vector3[] _path = System.Array.Empty<Vector3>();
+        private int _pathIndex;
         private bool _targetReached;
         private Vector3 _currentTargetPosition;
         private float _lastPathUpdateTime;
-
-        // ── Unity lifecycle ──────────────────────────────────────────────────
+        private Vector3 _smoothVelocityXZ;
+        private float _targetPickPhase;
 
         protected override void Awake()
         {
             base.Awake();
-            _pathfinder = FindObjectOfType<PathfindController>();
+            ResolvePathfinder();
+        }
+
+        private void ResolvePathfinder()
+        {
+            if (pathfindingObject != null)
+            {
+                _pathfinder = pathfindingObject.GetComponent<PathfindController>()
+                              ?? pathfindingObject.GetComponentInChildren<PathfindController>(true);
+            }
+
+            if (_pathfinder == null && !string.IsNullOrWhiteSpace(pathfindingSingletonName))
+            {
+                foreach (var pc in FindObjectsByType<PathfindController>(
+                             FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    if (pc != null && pc.gameObject.name == pathfindingSingletonName)
+                    {
+                        _pathfinder = pc;
+                        break;
+                    }
+                }
+            }
+
+            if (_pathfinder == null)
+                _pathfinder = FindFirstObjectByType<PathfindController>();
+
+            if (_pathfinder == null)
+                Debug.LogError($"[AiController] {name} : aucun PathfindController — l’IA ne pourra pas calculer de chemin.");
         }
 
         private void Start()
@@ -276,122 +83,199 @@ namespace Agents
             if (GamePauseState.IsPaused || (GameManager.Instance != null && GameManager.Instance.IsMatchOver))
             {
                 StopMovement();
+                _smoothVelocityXZ = Vector3.zero;
                 return;
             }
 
             FollowPath();
         }
 
-        // ── Behaviour loop ───────────────────────────────────────────────────
-
         private IEnumerator RunBehaviour()
         {
             while (true)
             {
-                // Select target
-                PickTarget();
-                yield return new WaitForSeconds(_targetSelectDelay);
+                if (GameManager.Instance != null && GameManager.Instance.IsMatchOver)
+                    yield break;
 
-                // Follow until close enough or has LOS
-                while (!IsCloseEnough() && !HasLineOfSight(_currentTargetPosition))
+                while (!TryPickTarget())
                 {
-                    if (_targetReached || (Time.time - _lastPathUpdateTime) > _timeBetweenPathUpdates)
+                    if (GameManager.Instance != null && GameManager.Instance.IsMatchOver)
+                        yield break;
+                    yield return null;
+                }
+
+                yield return DelayWhilePlaying(_targetSelectDelay);
+                if (GameManager.Instance != null && GameManager.Instance.IsMatchOver)
+                    yield break;
+
+                // Ne s’arrêter que dans la « zone de tir » : la LOS seule (très loin) ne doit pas figer l’IA
+                // (sinon le 4e slot, souvent excentré, reste planté en visée impossible).
+                while (!IsCloseEnough())
+                {
+                    if (GameManager.Instance != null && GameManager.Instance.IsMatchOver)
+                        yield break;
+                    if (_pathfinder != null &&
+                        (_targetReached || Time.time - _lastPathUpdateTime > _timeBetweenPathUpdates))
                         UpdatePath();
                     yield return null;
                 }
 
-                // Aim
                 float aimDeadline = Time.time + _aiMaxAimSeconds;
                 while (Time.time < aimDeadline && !IsAimedAtTarget())
                 {
+                    if (GameManager.Instance != null && GameManager.Instance.IsMatchOver)
+                        yield break;
                     AimAtTarget();
                     yield return null;
                 }
 
-                // Charge
-                float charge = 0f;
-                float chargeGoal = UnityEngine.Random.Range(_aiChargeMin, _aiChargeMax);
-                while (charge < chargeGoal)
-                {
-                    charge += Time.deltaTime;
-                    yield return null;
-                }
+                float chargeGoal = Random.Range(_aiChargeMin, _aiChargeMax);
+                yield return DelayWhilePlaying(chargeGoal);
+                if (GameManager.Instance != null && GameManager.Instance.IsMatchOver)
+                    yield break;
 
-                // Fire
-                FireShot(Mathf.Clamp01(charge));
+                FireShot(Mathf.Clamp01(chargeGoal));
             }
         }
 
-        // ── Movement ─────────────────────────────────────────────────────────
+        private static IEnumerator DelayWhilePlaying(float seconds)
+        {
+            float t = 0f;
+            while (t < seconds)
+            {
+                if (!GamePauseState.IsPaused)
+                    t += Time.deltaTime;
+                yield return null;
+            }
+        }
 
         private void FollowPath()
         {
-            if (_targetReached || _path == null || _pathIndex >= _path.Length) return;
-
-            float remaining = moveSpeed * Time.fixedDeltaTime;
-
-            while (remaining > 0 && _pathIndex < _path.Length)
+            if (_pathfinder == null || _targetReached || _path == null || _path.Length == 0 ||
+                _pathIndex >= _path.Length)
             {
-                Vector3 waypoint = _path[_pathIndex];
-                float distToWaypoint = Vector3.Distance(transform.position, waypoint);
+                ApplySmoothedHorizontalVelocity(Vector3.zero);
+                return;
+            }
 
-                if (distToWaypoint <= remaining)
-                {
-                    _rb.MovePosition(waypoint);
-                    remaining -= distToWaypoint;
-                    _pathIndex++;
-                }
-                else
-                {
-                    _rb.MovePosition(Vector3.MoveTowards(transform.position, waypoint, remaining));
-                    remaining = 0;
-                }
+            Vector3 waypoint = _path[_pathIndex];
+            Vector3 self = transform.position;
+            Vector3 flat = waypoint - self;
+            flat.y = 0f;
+            float distH = flat.magnitude;
+
+            if (distH <= _arrivalThreshold)
+            {
+                _pathIndex++;
+                if (_pathIndex >= _path.Length)
+                    ApplySmoothedHorizontalVelocity(Vector3.zero);
+                return;
+            }
+
+            flat /= distH;
+            Vector3 desired = flat * moveSpeed;
+            ApplySmoothedHorizontalVelocity(desired);
+
+            if (bodyTurnSpeed > 1f && flat.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(flat, Vector3.up);
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot,
+                    bodyTurnSpeed * Time.fixedDeltaTime);
             }
         }
 
-        // ── Targeting ────────────────────────────────────────────────────────
-
-        private void PickTarget()
+        private void ApplySmoothedHorizontalVelocity(Vector3 targetXZ)
         {
-            var positions = GameManager.Instance.GetAgentsPositions()
-                .Where(x => (x - transform.position).sqrMagnitude > 1f)
-                .ToList();
+            if (!useHorizontalVelocityForMovement)
+            {
+                _rb.linearVelocity = new Vector3(targetXZ.x, _rb.linearVelocity.y, targetXZ.z);
+                return;
+            }
 
-            if (!positions.Any()) return;
+            Vector3 current = new Vector3(_rb.linearVelocity.x, 0f, _rb.linearVelocity.z);
+            Vector3 smoothed = Vector3.SmoothDamp(current, targetXZ, ref _smoothVelocityXZ, velocitySmoothTime,
+                moveSpeed * 2f, Time.fixedDeltaTime);
+            _rb.linearVelocity = new Vector3(smoothed.x, _rb.linearVelocity.y, smoothed.z);
+        }
 
-            var losTarget = positions.FirstOrDefault(HasLineOfSight);
-            _currentTargetPosition = losTarget != default
-                ? losTarget
-                : positions.OrderBy(x => (x - transform.position).sqrMagnitude).First();
+        private bool TryPickTarget()
+        {
+            if (GameManager.Instance == null) return false;
+
+            var positions = GameManager.Instance.GetOtherAliveAgentPositions(this);
+            if (positions.Count == 0) return false;
+
+            _currentTargetPosition = PickTargetPosition(positions);
 
             _targetReached = (_currentTargetPosition - transform.position).sqrMagnitude
                              < _arrivalThreshold * _arrivalThreshold;
             UpdatePath();
+            return true;
+        }
+
+        /// <summary>
+        /// Évite que toutes les IA visent toujours le même adversaire : mélange slot, temps et hasard.
+        /// </summary>
+        private Vector3 PickTargetPosition(List<Vector3> positions)
+        {
+            _targetPickPhase += Time.deltaTime * 0.22f + SlotIndex * 0.07f;
+            var sorted = positions.OrderBy(p => HorizontalSqrDist(transform.position, p)).ToList();
+
+            Vector3? losPreferred = null;
+            foreach (var p in sorted)
+            {
+                if (HasLineOfSight(p) && HorizontalSqrDist(transform.position, p) <=
+                    _aiComfortShotRange * _aiComfortShotRange)
+                {
+                    losPreferred = p;
+                    break;
+                }
+            }
+
+            if (losPreferred.HasValue && Random.value < 0.35f)
+                return losPreferred.Value;
+
+            int n = sorted.Count;
+            int offset = (Mathf.Abs(SlotIndex) + Mathf.FloorToInt(_targetPickPhase)) % n;
+            if (Random.value < 0.45f && n >= 2)
+            {
+                int second = (offset + 1) % n;
+                return Random.value < 0.5f ? sorted[offset] : sorted[second];
+            }
+
+            return sorted[offset];
+        }
+
+        private static float HorizontalSqrDist(Vector3 a, Vector3 b)
+        {
+            float dx = a.x - b.x;
+            float dz = a.z - b.z;
+            return dx * dx + dz * dz;
         }
 
         private void UpdatePath()
         {
+            if (_pathfinder == null) return;
+
             _lastPathUpdateTime = Time.time;
             _pathIndex = 0;
             _targetReached = false;
             var path = _pathfinder.GetPath(transform.position, _currentTargetPosition);
-            _path = path != null ? path.ToArray() : Array.Empty<Vector3>();
+            _path = path != null && path.Count > 0 ? path.ToArray() : System.Array.Empty<Vector3>();
         }
 
-        // ── Checks ───────────────────────────────────────────────────────────
-
         private bool IsCloseEnough() =>
-            (_currentTargetPosition - transform.position).sqrMagnitude
+            HorizontalSqrDist(transform.position, _currentTargetPosition)
             < _aiComfortShotRange * _aiComfortShotRange;
 
         private bool HasLineOfSight(Vector3 target)
         {
-            Vector3 direction = target - transform.position;
+            Vector3 origin = transform.position + Vector3.up * 0.55f;
+            Vector3 direction = target + Vector3.up * 0.5f - origin;
             LayerMask mask = LayerMask.GetMask("Obstacle", "Wall");
-            return !Physics.Raycast(transform.position, direction.normalized, direction.magnitude, mask);
+            return !Physics.Raycast(origin, direction.normalized, direction.magnitude, mask,
+                QueryTriggerInteraction.Ignore);
         }
-
-        // ── Aim ──────────────────────────────────────────────────────────────
 
         private void AimAtTarget()
         {

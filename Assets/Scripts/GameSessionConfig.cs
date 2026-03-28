@@ -20,7 +20,7 @@ public static class GameSessionConfig
 
     public static void PrepareFromMenu(int playerCount, bool[] computerControlledPerSlot, string[] playerNamesPerSlot)
     {
-        PlayerCount = Mathf.Clamp(playerCount, GameManager.MinPlayers, GameManager.MaxPlayers);
+        PlayerCount = Mathf.Clamp(playerCount, GameManager.MinAgent, GameManager.MaxPlayers);
         LoadedFromMenu = true;
 
         for (int i = 0; i < 4; i++)
@@ -34,13 +34,6 @@ public static class GameSessionConfig
             else
                 s_playerNames[i] = null;
         }
-    }
-
-    public static int GetEffectivePlayerCount(int inspectorDefault)
-    {
-        if (LoadedFromMenu)
-            return PlayerCount;
-        return Mathf.Clamp(inspectorDefault, GameManager.MinPlayers, GameManager.MaxPlayers);
     }
 
     public static string GetPlayerNameForSlot(int slotIndex)
@@ -66,5 +59,12 @@ public static class GameSessionConfig
     public static int GetComputerCount()
     {
         return s_computerSlot.Count(x => x);
+    }
+
+    /// <summary>True si le slot (0–3) est une IA selon le menu principal.</summary>
+    public static bool IsComputerControlledSlot(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= 4) return false;
+        return s_computerSlot[slotIndex];
     }
 }

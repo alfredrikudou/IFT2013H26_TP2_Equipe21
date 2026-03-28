@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 /// <summary>
 /// Menu principal (UIDocument) : configuration 2–4 joueurs, crédits, quitter.
-/// Règle : les joueurs 1 et 2 peuvent être Humain ou IA ; à partir du 3e joueur, toujours IA.
+/// Chaque slot visible (2 à 4 joueurs) peut être Humain ou IA, y compris les joueurs 3 et 4.
 /// </summary>
 [RequireComponent(typeof(UIDocument))]
 public class MainMenuController : MonoBehaviour
@@ -69,9 +69,9 @@ public class MainMenuController : MonoBehaviour
             if (_nameFields[i] != null)
                 _nameFields[i].value = $"Joueur {i + 1}";
             if (_aiToggles[i] == null) continue;
-            // Slots 0–1 : humains par défaut ; slots 2–3 : IA obligatoires (3e et 4e joueurs).
+            // Slots 0–1 : humains par défaut ; 3–4 : IA par défaut (modifiable).
             _aiToggles[i].value = i >= 2;
-            _aiToggles[i].SetEnabled(i < 2);
+            _aiToggles[i].SetEnabled(true);
         }
 
         _creditsLabel = root.Q<Label>("credits-body__label");
@@ -130,29 +130,20 @@ public class MainMenuController : MonoBehaviour
             if (_playerRows[i] != null)
                 _playerRows[i].style.display = i < count ? DisplayStyle.Flex : DisplayStyle.None;
             if (_aiToggles[i] != null)
-            {
-                _aiToggles[i].SetEnabled(i < 2);
-                if (i >= 2)
-                    _aiToggles[i].value = true;
-            }
+                _aiToggles[i].SetEnabled(i < count);
         }
     }
 
     private void LaunchGame()
     {
         int count = 2 + (_playerCountDropdown != null ? _playerCountDropdown.index : 0);
-        count = Mathf.Clamp(count, GameManager.MinPlayers, GameManager.MaxPlayers);
+        count = Mathf.Clamp(count, GameManager.MinAgent, GameManager.MaxPlayers);
 
         var computer = new bool[4];
         var names = new string[4];
         for (int i = 0; i < count; i++)
         {
-            // Joueurs 3 et 4 (indices 2 et 3) : toujours IA.
-            if (i >= 2)
-                computer[i] = true;
-            else if (_aiToggles[i] != null)
-                computer[i] = _aiToggles[i].value;
-
+            computer[i] = _aiToggles[i] != null && _aiToggles[i].value;
             names[i] = _nameFields[i] != null ? _nameFields[i].value : null;
         }
 

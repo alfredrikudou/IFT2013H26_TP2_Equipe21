@@ -26,13 +26,13 @@
                 <ui:VisualElement name="player-row-3" class="setup-row">
                     <ui:VisualElement class="setup-row-top">
                         <ui:TextField name="p3-name__field" class="setup-name-field" placeholder=""/>
-                        <ui:Toggle text="IA (obligatoire)" name="p3-ai__toggle" class="setup-toggle"/>
+                        <ui:Toggle text="IA (ordinateur)" name="p3-ai__toggle" class="setup-toggle"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="player-row-4" class="setup-row">
                     <ui:VisualElement class="setup-row-top">
                         <ui:TextField name="p4-name__field" class="setup-name-field" placeholder=""/>
-                        <ui:Toggle text="IA (obligatoire)" name="p4-ai__toggle" class="setup-toggle"/>
+                        <ui:Toggle text="IA (ordinateur)" name="p4-ai__toggle" class="setup-toggle"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement class="setup-buttons-row">

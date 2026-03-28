@@ -1,7 +1,5 @@
-using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine;
-
 namespace Pathfinding
 {
     public class PathGrid

@@ -189,27 +189,11 @@ public class GameManager : MonoBehaviour
             Debug.LogError("[GameManager] aiPrefab sans Agents.AiController.");
             return;
         }
-
-        Agents.Agent.ResetStaticNaming();
-
-        for (int i = 0; i < n; i++)
-        {
-            Debug.Log("Creating ai");
-            Transform sp = spawnPoints[i + numberOfPlayers];
-            var go = Instantiate(aiPrefab, sp.position, sp.rotation);
-            var ai = go != null ? go.GetComponent<Agents.AiController>() : null;
-            if (ai != null)
-            {
-                ai.SetSlotIndex(i);
-                if (GameSessionConfig.LoadedFromMenu)
-                    ai.SetName(GameSessionConfig.GetPlayerNameForSlot(i));
-                _ais.Add(ai);
-                _agents.Add(ai);
-            }
-        }
-
-        foreach (var cam in FindObjectsOfType<CameraController>(false))
-            cam.RequestTargetsRefreshFromPlayers();
+        ai.SetSlotIndex(slotIndex);
+        if (GameSessionConfig.LoadedFromMenu)
+            ai.SetName(GameSessionConfig.GetPlayerNameForSlot(slotIndex));
+        _ais.Add(ai);
+        _agents.Add(ai);
     }
 
     public void OnPlayerHealthChanged(Agents.Agent agent)

@@ -40,11 +40,11 @@ public static class GameSessionConfig
     {
         // Fallback : "Joueur x" (x = numéro de slot + 1)
         if (slotIndex < 0 || slotIndex >= 4)
-            return "Joueur";
+            return "Agent";
 
         string s = s_playerNames[slotIndex];
         if (string.IsNullOrWhiteSpace(s))
-            return $"Joueur {slotIndex + 1}";
+            return $"Agent {slotIndex + 1}";
 
         return s.Trim();
     }

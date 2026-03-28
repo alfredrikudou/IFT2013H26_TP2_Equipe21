@@ -113,18 +113,18 @@ public class GamePauseController : MonoBehaviour
 
         _playersContainer.Clear();
 
-        var players = Object.FindObjectsOfType<Agents.Player>(false)
+        var agents = Object.FindObjectsOfType<Agents.Agent>(false)
             .Where(p => p != null)
             .ToList();
 
         // Si SlotIndex est renseigné, on trie par slot (Player0..), sinon par nom.
-        bool anySlots = players.Any(p => p.SlotIndex >= 0);
+        bool anySlots = agents.Any(p => p.SlotIndex >= 0);
         if (anySlots)
-            players = players.OrderBy(p => p.SlotIndex >= 0 ? p.SlotIndex : int.MaxValue).ToList();
+            agents = agents.OrderBy(p => p.SlotIndex >= 0 ? p.SlotIndex : int.MaxValue).ToList();
         else
-            players = players.OrderBy(p => p.GetName()).ToList();
+            agents = agents.OrderBy(p => p.GetName()).ToList();
 
-        foreach (var p in players)
+        foreach (var p in agents)
         {
             int current = Mathf.RoundToInt(p.CurrentHealth);
             int max = Mathf.RoundToInt(p.MaxHealth);

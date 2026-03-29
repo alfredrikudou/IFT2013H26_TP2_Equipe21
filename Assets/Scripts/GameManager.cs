@@ -3,6 +3,7 @@ using System.Linq;
 using Agents;
 using UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
@@ -231,6 +232,12 @@ public class GameManager : MonoBehaviour
             if (player.GetName() == dto.Name)
                 player.UpdateControl(dto);
         }
+    }
+    void Update()
+    {
+        if (_players.Count <= 0)
+            if(Keyboard.current.pKey.wasPressedThisFrame)
+                FindFirstObjectByType<GamePauseController>()?.Pause();
     }
 
     public List<Vector3> GetAgentsPositions()

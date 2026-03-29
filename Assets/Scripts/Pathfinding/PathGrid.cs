@@ -6,18 +6,22 @@ namespace Pathfinding
     {
         private Transform _mapPlane;
         private float _defaultPlaneSize = 10f;
-        private float _nodeSize = 1 / 10f;
+        private float _nodeSize = 1.0f / 10f;
+        private float _walkerRadius = 0.5f;
+        private float _checkSphereRadius;
         private LayerMask _wallLayer;
 
         public Node[,] Grid { get; private set; }
         private int _nNodeWidth, _nNodeHeight;
         private Vector3 _origin;
 
-        public PathGrid(Transform mapPlane, float defaultPlaneSize, float nodeSize, LayerMask wallLayer)
+        public PathGrid(Transform mapPlane, float defaultPlaneSize, float nodeSize, float walkerRadius, LayerMask wallLayer)
         {
             _mapPlane     = mapPlane;
             _defaultPlaneSize = defaultPlaneSize;
             _nodeSize     = nodeSize;
+            _walkerRadius = walkerRadius;
+            _checkSphereRadius = _walkerRadius > _nodeSize ? _walkerRadius : _nodeSize;
             _wallLayer = wallLayer;
             BuildGrid();
         }
@@ -31,13 +35,12 @@ namespace Pathfinding
             _nNodeHeight = Mathf.RoundToInt(worldHeight / _nodeSize);
             Grid = new Node[_nNodeWidth, _nNodeHeight];
 
-            _origin = _mapPlane.position - new Vector3(worldWidth * 0.5f, 0f, worldHeight * 0.5f); //bottom-left
-
+            _origin = _mapPlane.position - new Vector3(worldWidth * 0.5f, 0f, worldHeight * 0.5f) + new Vector3(0f, _walkerRadius, 0f);
             for (int x = 0; x < _nNodeWidth; x++)
                 for (int z = 0; z < _nNodeHeight; z++)
                 {
                     Vector3 worldPos = _origin + new Vector3(x * _nodeSize, 0f, z * _nodeSize);
-                    bool walkable = !Physics.CheckSphere(worldPos, _nodeSize * 0.5f, _wallLayer);
+                    bool walkable = !Physics.CheckSphere(worldPos, _checkSphereRadius , _wallLayer);
                     Grid[x, z] = new Node(new Vector2Int(x, z), worldPos, walkable);
                 }
         }
@@ -53,15 +56,24 @@ namespace Pathfinding
         {
             var neighbours = new List<Node>();
             for (int x = -1; x <= 1; x++)
-                for (int z = -1; z <= 1; z++)
+            for (int z = -1; z <= 1; z++)
+            {
+                if (x == 0 && z == 0) continue;
+ 
+                int nx = node.GridPos.x + x;
+                int nz = node.GridPos.y + z;
+ 
+                if (nx < 0 || nx >= _nNodeWidth || nz < 0 || nz >= _nNodeHeight) continue;
+                if (x != 0 && z != 0)
                 {
-                    if (x == 0 && z == 0) continue;
-                    int nx = node.GridPos.x + x;
-                    int nz = node.GridPos.y + z;
-                    if (nx >= 0 && nx < _nNodeWidth && nz >= 0 && nz < _nNodeHeight)
-                        neighbours.Add(Grid[nx, nz]);
+                    bool cardinalA = Grid[node.GridPos.x + x, node.GridPos.y].Walkable;
+                    bool cardinalB = Grid[node.GridPos.x, node.GridPos.y + z].Walkable;
+                    if (!cardinalA || !cardinalB) continue;
                 }
-
+ 
+                neighbours.Add(Grid[nx, nz]);
+            }
+ 
             return neighbours;
         }
     }

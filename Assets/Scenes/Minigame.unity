@@ -368,7 +368,7 @@ Transform:
   m_GameObject: {fileID: 81924506}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.38268343, w: 0.92387956}
-  m_LocalPosition: {x: -3.005, y: 0, z: -1.735}
+  m_LocalPosition: {x: -2.68, y: 0, z: -1.735}
   m_LocalScale: {x: 1.5, y: 3, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -595,7 +595,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pathfinding.PathfindController
   _mapPlane: {fileID: 1117668198}
   _defaultPlaneSize: 10
-  _nodeSize: 0.1
+  _nodeSize: 1
+  _walkerPrefab: {fileID: 4461693037923815005, guid: 79e992a664a02d14ba7addeec6f0db7e, type: 3}
   _wallLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -750,7 +751,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 252460483}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Walls
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1082,7 +1083,7 @@ Transform:
   m_GameObject: {fileID: 366433631}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268343, y: -0, z: -0, w: 0.92387956}
-  m_LocalPosition: {x: 3.11, y: 0, z: 0}
+  m_LocalPosition: {x: 3.11, y: 0, z: 0.58}
   m_LocalScale: {x: 1, y: 2, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1413,7 +1414,7 @@ Transform:
   m_GameObject: {fileID: 437975818}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -2.955}
+  m_LocalPosition: {x: 0.39, y: 0, z: -2.955}
   m_LocalScale: {x: 0.5, y: 1, z: 2.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1624,7 +1625,7 @@ Transform:
   m_GameObject: {fileID: 611944774}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.0554005, z: -0, w: -0.9984642}
-  m_LocalPosition: {x: 3.74, y: 0.6, z: -5.72}
+  m_LocalPosition: {x: 3.74, y: 0.6, z: -5.15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1642,7 +1643,7 @@ GameObject:
   - component: {fileID: 639792173}
   - component: {fileID: 639792172}
   - component: {fileID: 639792171}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: West Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1759,7 +1760,7 @@ GameObject:
   - component: {fileID: 707756570}
   - component: {fileID: 707756569}
   - component: {fileID: 707756568}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: North Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1884,7 +1885,7 @@ Transform:
   m_GameObject: {fileID: 734245162}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.88057095, z: -0, w: 0.4739144}
-  m_LocalPosition: {x: -12.31, y: 0.6, z: 10.81}
+  m_LocalPosition: {x: -10.24, y: 0.6, z: 9.07}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2416,7 +2417,7 @@ GameObject:
   - component: {fileID: 1211019975}
   - component: {fileID: 1211019974}
   - component: {fileID: 1211019973}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: East Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2918,7 +2919,7 @@ Transform:
   m_GameObject: {fileID: 1593155350}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.99106187, z: -0, w: -0.13340311}
-  m_LocalPosition: {x: 4.57, y: 0.6, z: 11.68}
+  m_LocalPosition: {x: 4.27, y: 0.6, z: 10.92}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3088,7 +3089,7 @@ Transform:
   m_GameObject: {fileID: 1660794857}
   serializedVersion: 2
   m_LocalRotation: {x: -0.4656082, y: -0.13397424, z: 0.8309736, w: 0.27339137}
-  m_LocalPosition: {x: 3.145, y: 0, z: -3.125}
+  m_LocalPosition: {x: 3.145, y: 0, z: -2.661}
   m_LocalScale: {x: 2, y: 2.5000005, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3129,7 +3130,7 @@ GameObject:
   - component: {fileID: 1719895201}
   - component: {fileID: 1719895200}
   - component: {fileID: 1719895199}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: South Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}

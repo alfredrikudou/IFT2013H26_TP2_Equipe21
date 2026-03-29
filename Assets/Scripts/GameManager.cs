@@ -33,6 +33,9 @@ public class GameManager : MonoBehaviour
 
     public bool IsMatchOver => _matchOver;
 
+    /// <summary>Agents actuellement en jeu (ordre de spawn). Pour HUD, minimap, etc.</summary>
+    public IReadOnlyList<Agents.Agent> ActiveAgents => _agents;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)

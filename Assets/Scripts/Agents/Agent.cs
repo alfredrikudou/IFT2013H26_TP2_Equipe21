@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,6 +48,14 @@ namespace Agents
 
         [SerializeField] protected Vector3 _sliderOffset = new Vector3(0f, -0.6f, 0f);
 
+        [Header("Nom (HUD)")]
+        [Tooltip("TextMeshPro ou TextMeshProUGUI dans le prefab : affiche le nom défini par le menu ou SetName.")]
+        [SerializeField] protected TMP_Text _nameTextMeshPro;
+        [Tooltip("Si vide, le canon sert d’ancre : le nom suit la visée comme la caméra. Sinon, utilisez ex. CameraPivot.")]
+        [SerializeField] private Transform _nameLabelAnchor;
+        [Tooltip("Position locale du nom par rapport à l’ancre (au-dessus / devant le canon).")]
+        [SerializeField] private Vector3 _nameLabelLocalOffset = new Vector3(0f, 0.28f, 0.12f);
+
         protected Rigidbody _rb;
         private static int nameCount = 0;
         protected string _name = $"Agent {nameCount++}";
@@ -72,6 +81,7 @@ namespace Agents
         public void SetName(string agentName)
         {
             if (!string.IsNullOrWhiteSpace(agentName)) _name = agentName.Trim();
+            RefreshNameDisplay();
         }
 
         public static void ResetStaticNaming()
@@ -195,6 +205,8 @@ namespace Agents
 
             EnsureFirePoint();
             EnsurePowerSlider();
+            ResolveNameTextMeshProIfNeeded();
+            RefreshNameDisplay();
             AgentHealth?.RefreshHealthUI();
         }
 
@@ -211,10 +223,32 @@ namespace Agents
 
         protected virtual void LateUpdate()
         {
-            if (_powerSlider == null) return;
-            var canvas = _powerSlider.GetComponentInParent<Canvas>();
-            if (canvas != null)
-                canvas.transform.position = transform.position + _sliderOffset;
+            if (_powerSlider != null)
+            {
+                var canvas = _powerSlider.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                    canvas.transform.position = transform.position + _sliderOffset;
+            }
+
+            UpdateNameLabelBillboard();
+        }
+
+        /// <summary>
+        /// Place le nom sur l’ancre (canon par défaut) et l’oriente comme la caméra du slot pour une lecture nette.
+        /// </summary>
+        private void UpdateNameLabelBillboard()
+        {
+            if (_nameTextMeshPro == null) return;
+
+            Transform anchor = _nameLabelAnchor != null
+                ? _nameLabelAnchor
+                : (_cannon != null ? _cannon : transform);
+
+            Transform nameT = _nameTextMeshPro.transform;
+            nameT.position = anchor.TransformPoint(_nameLabelLocalOffset);
+
+            if (_camera != null && _camera.isActiveAndEnabled)
+                nameT.rotation = _camera.transform.rotation;
         }
 
         private void EnsureFirePoint()
@@ -268,6 +302,29 @@ namespace Agents
         private void UpdatePowerUI()
         {
             if (_powerSlider != null) _powerSlider.value = _charge01;
+        }
+
+        /// <summary>Si le champ n’est pas relié dans l’inspecteur, cherche un enfant nommé « NameLabel » (n’importe quelle profondeur).</summary>
+        private void ResolveNameTextMeshProIfNeeded()
+        {
+            if (_nameTextMeshPro != null) return;
+            foreach (var t in GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name != "NameLabel") continue;
+                var tmp = t.GetComponent<TMP_Text>();
+                if (tmp != null)
+                {
+                    _nameTextMeshPro = tmp;
+                    break;
+                }
+            }
+        }
+
+        private void RefreshNameDisplay()
+        {
+            if (_nameTextMeshPro == null) return;
+            _nameTextMeshPro.text = _name;
+            _nameTextMeshPro.raycastTarget = false;
         }
     }
 }

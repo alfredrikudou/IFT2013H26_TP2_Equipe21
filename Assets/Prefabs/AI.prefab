@@ -226,9 +226,15 @@ MonoBehaviour:
   _explosionDamagesShooter: 1
   _powerSlider: {fileID: 0}
   _sliderOffset: {x: 0, y: -0.6, z: 0}
+  _nameTextMeshPro: {fileID: 0}
+  pathfindingObject: {fileID: 0}
+  pathfindingSingletonName: PathfindController
   _arrivalThreshold: 0.2
   _timeBetweenPathUpdates: 5
   _targetSelectDelay: 0.5
+  useHorizontalVelocityForMovement: 1
+  velocitySmoothTime: 0.14
+  bodyTurnSpeed: 280
   _aiAimToleranceDegrees: 10
   _aiMaxAimSeconds: 4
   _aiChargeMin: 0.72
@@ -635,7 +641,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0

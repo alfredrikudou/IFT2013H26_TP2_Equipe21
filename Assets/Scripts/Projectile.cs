@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
@@ -6,7 +7,11 @@ public class Projectile : MonoBehaviour
     public bool HasImpacted { get; private set; }
 
     [SerializeField] private float lifeSeconds = 8f;
+    [Tooltip("Évite que le projectile touche tout de suite le corps du tireur (canon dans le collider, nom au-dessus du tube, etc.).")]
+    [SerializeField] private float ignoreShooterCollisionSeconds = 0.2f;
     private Rigidbody _rb;
+    private Collider _projectileCollider;
+    private Collider[] _shooterCollidersIgnored;
 
     private float _spawnTime;
     private Agents.Agent _shooter;
@@ -23,6 +28,12 @@ public class Projectile : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+        _projectileCollider = GetComponent<Collider>();
+    }
+
+    private void OnDestroy()
+    {
+        RestoreShooterCollisions();
     }
 
     /// <summary>À appeler juste après Instantiate (avant le premier FixedUpdate si possible).</summary>
@@ -34,6 +45,37 @@ public class Projectile : MonoBehaviour
         _damageShooter = damageShooter;
         
         _rb.linearVelocity = direction * speed;
+
+        if (_projectileCollider != null && _shooter != null && ignoreShooterCollisionSeconds > 0f)
+            StartCoroutine(IgnoreShooterCollisionsRoutine());
+    }
+
+    private IEnumerator IgnoreShooterCollisionsRoutine()
+    {
+        RestoreShooterCollisions();
+
+        var cols = _shooter.GetComponentsInChildren<Collider>(true);
+        foreach (var c in cols)
+        {
+            if (c == null || !c.enabled || c == _projectileCollider) continue;
+            Physics.IgnoreCollision(_projectileCollider, c, true);
+        }
+
+        _shooterCollidersIgnored = cols;
+        yield return new WaitForSeconds(ignoreShooterCollisionSeconds);
+        RestoreShooterCollisions();
+    }
+
+    private void RestoreShooterCollisions()
+    {
+        if (_projectileCollider == null || _shooterCollidersIgnored == null) return;
+        foreach (var c in _shooterCollidersIgnored)
+        {
+            if (c != null)
+                Physics.IgnoreCollision(_projectileCollider, c, false);
+        }
+
+        _shooterCollidersIgnored = null;
     }
 
     private void Update()

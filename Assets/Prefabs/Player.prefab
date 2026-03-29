@@ -191,7 +191,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player.Player
   _camera: {fileID: 2748875892333040499}
-  _cameraPivot: {fileID: 1889476595223166836}
   moveSpeed: 5
   _cannon: {fileID: 9158435043672577768}
   _aimSpeed: 90
@@ -204,12 +203,15 @@ MonoBehaviour:
   _minShotSpeed: 6
   _maxShotSpeed: 18
   _chargeSecondsToMax: 1.2
-  _fireCooldown: 3
   _explosionRadius: 3
   _explosionMaxDamage: 40
   _explosionDamagesShooter: 1
   _powerSlider: {fileID: 0}
   _sliderOffset: {x: 0, y: -0.6, z: 0}
+  _nameTextMeshPro: {fileID: 0}
+  _nameLabelAnchor: {fileID: 0}
+  _nameLabelLocalOffset: {x: 0, y: 0.28, z: 0.12}
+  _cameraPivot: {fileID: 1889476595223166836}
 --- !u!114 &9142070157792044009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -629,7 +631,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0

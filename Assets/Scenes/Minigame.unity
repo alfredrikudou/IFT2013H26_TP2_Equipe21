@@ -386,7 +386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17323428709528c43906a94fcb387465, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.MinimapPoi
-  _tint: {r: 0.65, g: 0.65, b: 0.65, a: 0.95}
+  _tint: {r: 0.01562428, g: 0.7007001, b: 0.99371064, a: 0.95}
 --- !u!1001 &134443584
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -967,7 +967,7 @@ MonoBehaviour:
   renderTextureShortSide: 256
   environmentCullingMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 4294967295
   iconsRoot: {fileID: 1309994187}
   iconSizePixels: 10
   agentColors:
@@ -3106,7 +3106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17323428709528c43906a94fcb387465, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.MinimapPoi
-  _tint: {r: 0.65, g: 0.65, b: 0.65, a: 0.95}
+  _tint: {r: 0, g: 0.7490196, b: 1, a: 1}
 --- !u!4 &1665510013 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 857442457081363215, guid: 96a7e39dbacf54d439ddab2eba57af67, type: 3}

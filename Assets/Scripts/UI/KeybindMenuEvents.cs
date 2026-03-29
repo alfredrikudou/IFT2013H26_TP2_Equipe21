@@ -169,7 +169,7 @@ namespace UI
             {
                 if (!DeviceManager.Instance.IsDeviceSupported(device))
                 {
-                    Debug.Log("Device is not supported");
+                    Debug.Log("Device is not supported :" + device.GetType());
                     return;
                 }
                 if (IsDeviceBound(playerName, device))

@@ -38,10 +38,12 @@ namespace Agents
         private float _lastPathUpdateTime;
         private Vector3 _smoothVelocityXZ;
         private float _targetPickPhase;
+        private AgentVisibilityState _visibilityState;
 
         protected override void Awake()
         {
             base.Awake();
+            _visibilityState = GetComponent<AgentVisibilityState>();
             ResolvePathfinder();
         }
 
@@ -114,8 +116,11 @@ namespace Agents
                 {
                     if (GameManager.Instance != null && GameManager.Instance.IsMatchOver)
                         yield break;
+                    float pathInterval = _timeBetweenPathUpdates;
+                    if (_visibilityState != null && _visibilityState.IsLogicallyCulled)
+                        pathInterval *= 4f;
                     if (_pathfinder != null &&
-                        (_targetReached || Time.time - _lastPathUpdateTime > _timeBetweenPathUpdates))
+                        (_targetReached || Time.time - _lastPathUpdateTime > pathInterval))
                         UpdatePath();
                     yield return null;
                 }

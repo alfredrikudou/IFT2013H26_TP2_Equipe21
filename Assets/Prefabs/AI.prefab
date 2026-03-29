@@ -104,6 +104,7 @@ GameObject:
   - component: {fileID: 8086810951694614205}
   - component: {fileID: 9142070157792044009}
   - component: {fileID: 8627112439776363006}
+  - component: {fileID: 8697016578450955532}
   m_Layer: 0
   m_Name: AI
   m_TagString: Untagged
@@ -227,6 +228,8 @@ MonoBehaviour:
   _powerSlider: {fileID: 0}
   _sliderOffset: {x: 0, y: -0.6, z: 0}
   _nameTextMeshPro: {fileID: 0}
+  _nameLabelAnchor: {fileID: 0}
+  _nameLabelLocalOffset: {x: 0, y: 0.28, z: 0.12}
   pathfindingObject: {fileID: 0}
   pathfindingSingletonName: PathfindController
   _arrivalThreshold: 0.2
@@ -240,6 +243,21 @@ MonoBehaviour:
   _aiChargeMin: 0.72
   _aiChargeMax: 1
   _aiComfortShotRange: 3
+--- !u!114 &8697016578450955532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4099699840582463440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7c662cdb57f8884db6d3aa71a8a8285, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Rendering.SeeThroughImportantAgent
+  quadOffset: {x: 0, y: 0.55, z: 0}
+  quadScale: 1.15
+  silhouetteColor: {r: 1, g: 0.4, b: 0.12, a: 0.55}
 --- !u!1 &5815051333401397578
 GameObject:
   m_ObjectHideFlags: 0

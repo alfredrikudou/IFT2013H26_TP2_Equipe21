@@ -16,7 +16,7 @@ namespace UI
         [SerializeField] private Transform mapPlane;
         [SerializeField] private float planeWorldSize = 10f;
 
-        [Header("Rendu caméra — environnement (6) + données scène (9)")]
+        [Header("Rendu caméra — environnement + données scène")]
         [Tooltip("Si activé, une caméra orthographique rend la scène dans une RenderTexture affichée sur ce RawImage.")]
         [SerializeField] private bool useCameraRendering = true;
         [SerializeField] private RawImage environmentView;

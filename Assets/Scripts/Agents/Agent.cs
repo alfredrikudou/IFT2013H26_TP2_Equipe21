@@ -61,6 +61,8 @@ namespace Agents
         protected string _name = $"Agent {nameCount++}";
         
         public float Charge01 => _charge01;
+        /// <summary>Caméra du slot (split-screen) — utilisée par le culling logique / silhouette.</summary>
+        public Camera ViewCamera => _camera;
         public Transform Cannon => _cannon;
         public Transform FirePoint
         {
@@ -207,6 +209,8 @@ namespace Agents
             EnsurePowerSlider();
             ResolveNameTextMeshProIfNeeded();
             RefreshNameDisplay();
+            if (GetComponent<AgentVisibilityState>() == null)
+                gameObject.AddComponent<AgentVisibilityState>();
             AgentHealth?.RefreshHealthUI();
         }
 

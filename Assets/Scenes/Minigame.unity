@@ -273,6 +273,7 @@ GameObject:
   - component: {fileID: 81924509}
   - component: {fileID: 81924508}
   - component: {fileID: 81924507}
+  - component: {fileID: 81924511}
   m_Layer: 7
   m_Name: Obstacles (3)
   m_TagString: Untagged
@@ -373,6 +374,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1117668198}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -45}
+--- !u!114 &81924511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81924506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17323428709528c43906a94fcb387465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.MinimapPoi
+  _tint: {r: 0.65, g: 0.65, b: 0.65, a: 0.95}
 --- !u!1001 &134443584
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -965,6 +979,7 @@ GameObject:
   - component: {fileID: 366433634}
   - component: {fileID: 366433633}
   - component: {fileID: 366433632}
+  - component: {fileID: 366433636}
   m_Layer: 7
   m_Name: Obstacles
   m_TagString: Untagged
@@ -1065,6 +1080,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1117668198}
   m_LocalEulerAnglesHint: {x: 45, y: 0, z: 0}
+--- !u!114 &366433636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 366433631}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17323428709528c43906a94fcb387465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.MinimapPoi
+  _tint: {r: 0.65, g: 0.65, b: 0.65, a: 0.95}
 --- !u!1 &394556331
 GameObject:
   m_ObjectHideFlags: 0
@@ -1156,6 +1184,7 @@ GameObject:
   - component: {fileID: 412298333}
   - component: {fileID: 412298332}
   - component: {fileID: 412298331}
+  - component: {fileID: 412298335}
   m_Layer: 7
   m_Name: Obstacles (2)
   m_TagString: Untagged
@@ -1256,6 +1285,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1117668198}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &412298335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 412298330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17323428709528c43906a94fcb387465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.MinimapPoi
+  _tint: {r: 0.65, g: 0.65, b: 0.65, a: 0.95}
 --- !u!1 &437975818
 GameObject:
   m_ObjectHideFlags: 0
@@ -1268,6 +1310,7 @@ GameObject:
   - component: {fileID: 437975821}
   - component: {fileID: 437975820}
   - component: {fileID: 437975819}
+  - component: {fileID: 437975823}
   m_Layer: 7
   m_Name: Obstacles (1)
   m_TagString: Untagged
@@ -1368,6 +1411,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1117668198}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &437975823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 437975818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17323428709528c43906a94fcb387465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.MinimapPoi
+  _tint: {r: 0.65, g: 0.65, b: 0.65, a: 0.95}
 --- !u!1001 &504488338
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2857,6 +2913,7 @@ GameObject:
   - component: {fileID: 1660794860}
   - component: {fileID: 1660794859}
   - component: {fileID: 1660794858}
+  - component: {fileID: 1660794862}
   m_Layer: 7
   m_Name: Obstacles (4)
   m_TagString: Untagged
@@ -2957,6 +3014,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1117668198}
   m_LocalEulerAnglesHint: {x: -1.83, y: -57.941, z: 144.59}
+--- !u!114 &1660794862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1660794857}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17323428709528c43906a94fcb387465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.MinimapPoi
+  _tint: {r: 0.65, g: 0.65, b: 0.65, a: 0.95}
 --- !u!4 &1665510013 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 857442457081363215, guid: 96a7e39dbacf54d439ddab2eba57af67, type: 3}

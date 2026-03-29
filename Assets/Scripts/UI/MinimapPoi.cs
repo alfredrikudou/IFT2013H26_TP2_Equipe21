@@ -4,7 +4,8 @@ using UnityEngine;
 namespace UI
 {
     /// <summary>
-    /// À ajouter sur les obstacles ou objets importants à montrer sur la minimap (caisses, zones, etc.).
+    /// Marqueur optionnel pour des icônes UI sur la minimap. L’environnement visible sur la carte
+    /// vient du rendu caméra (<see cref="MinimapController"/>) selon les calques (sol, Obstacle, Wall, etc.).
     /// </summary>
     public sealed class MinimapPoi : MonoBehaviour
     {

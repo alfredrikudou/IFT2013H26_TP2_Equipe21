@@ -6,9 +6,9 @@ using UnityEngine.UI;
 namespace UI
 {
     /// <summary>
-    /// Minimap 2D : repères pour les joueurs (via <see cref="GameManager.ActiveAgents"/>)
-    /// et pour les objets marqués <see cref="MinimapPoi"/>.
-    /// Les limites du monde reprennent la même logique que <see cref="Pathfinding.PathGrid"/> (plan × taille).
+    /// Minimap conforme aux critères type TP : (6) rendu par une caméra orthographique + RenderTexture ;
+    /// (9) affichage des données environnementales via le <see cref="environmentCullingMask"/> (sol, murs, obstacles).
+    /// Optionnel : repères UI par-dessus (joueurs, <see cref="MinimapPoi"/>).
     /// </summary>
     public class MinimapController : MonoBehaviour
     {
@@ -16,8 +16,19 @@ namespace UI
         [SerializeField] private Transform mapPlane;
         [SerializeField] private float planeWorldSize = 10f;
 
-        [Header("UI")]
-        [Tooltip("RectTransform enfant du panneau minimap, ancré en bas-gauche (0,0) pleine zone, pour placer les icônes.")]
+        [Header("Rendu caméra — environnement (6) + données scène (9)")]
+        [Tooltip("Si activé, une caméra orthographique rend la scène dans une RenderTexture affichée sur ce RawImage.")]
+        [SerializeField] private bool useCameraRendering = true;
+        [SerializeField] private RawImage environmentView;
+        [Tooltip("Hauteur de la caméra au-dessus du centre du plan (axe Y monde).")]
+        [SerializeField] private float cameraHeightAboveMap = 45f;
+        [Tooltip("Hauteur en pixels de la RenderTexture (la largeur suit le ratio du terrain).")]
+        [SerializeField] private int renderTextureShortSide = 256;
+        [Tooltip("Calques visibles sur la minimap : sol (Default), Obstacle, Wall, etc. Exclure UI.")]
+        [SerializeField] private LayerMask environmentCullingMask;
+
+        [Header("Repères UI (optionnel, par-dessus la texture)")]
+        [Tooltip("RectTransform enfant du panneau, stretch sur toute la zone, au-dessus du RawImage dans la hierarchy.")]
         [SerializeField] private RectTransform iconsRoot;
         [SerializeField] private float iconSizePixels = 10f;
 
@@ -35,18 +46,37 @@ namespace UI
         private readonly List<Image> _poiIcons = new();
         private static Sprite _whiteSprite;
 
+        private Camera _minimapCamera;
+        private RenderTexture _renderTexture;
+        private GameObject _cameraHost;
+
+        private void Reset()
+        {
+            environmentCullingMask = LayerMask.GetMask("Default", "Obstacle", "Wall");
+        }
+
         private void Awake()
         {
+            if (environmentCullingMask.value == 0)
+                environmentCullingMask = LayerMask.GetMask("Default", "Obstacle", "Wall");
+
             RecomputeWorldBounds();
+            SetupEnvironmentCameraIfNeeded();
         }
 
         private void LateUpdate()
         {
-            if (iconsRoot == null) return;
-
             RecomputeWorldBounds();
+            UpdateEnvironmentCameraIfNeeded();
+
+            if (iconsRoot == null) return;
             SyncAgentIcons();
             SyncPoiIcons();
+        }
+
+        private void OnDestroy()
+        {
+            TeardownEnvironmentCamera();
         }
 
         private void RecomputeWorldBounds()
@@ -65,6 +95,110 @@ namespace UI
             _maxX = c.x + w * 0.5f;
             _minZ = c.z - d * 0.5f;
             _maxZ = c.z + d * 0.5f;
+        }
+
+        private void SetupEnvironmentCameraIfNeeded()
+        {
+            if (!useCameraRendering || environmentView == null || mapPlane == null)
+                return;
+
+            TeardownEnvironmentCamera();
+
+            _cameraHost = new GameObject("MinimapEnvironmentCamera");
+            _cameraHost.transform.SetParent(transform, false);
+
+            _minimapCamera = _cameraHost.AddComponent<Camera>();
+            _minimapCamera.orthographic = true;
+            _minimapCamera.clearFlags = CameraClearFlags.SolidColor;
+            _minimapCamera.backgroundColor = new Color(0.08f, 0.1f, 0.14f, 1f);
+            _minimapCamera.cullingMask = environmentCullingMask;
+            _minimapCamera.depth = -20f;
+            _minimapCamera.nearClipPlane = 0.3f;
+            _minimapCamera.farClipPlane = Mathf.Max(200f, cameraHeightAboveMap * 3f);
+            _minimapCamera.allowHDR = false;
+            _minimapCamera.allowMSAA = false;
+            _minimapCamera.useOcclusionCulling = false;
+            _minimapCamera.stereoTargetEye = StereoTargetEyeMask.None;
+
+            var aud = _minimapCamera.GetComponent<AudioListener>();
+            if (aud != null) Destroy(aud);
+
+            BuildOrResizeRenderTexture();
+            _minimapCamera.targetTexture = _renderTexture;
+            environmentView.texture = _renderTexture;
+        }
+
+        private void BuildOrResizeRenderTexture()
+        {
+            Vector3 scale = mapPlane.lossyScale;
+            float w = scale.x * planeWorldSize;
+            float d = scale.z * planeWorldSize;
+            float aspect = w / Mathf.Max(0.001f, d);
+
+            int h = Mathf.Max(32, renderTextureShortSide);
+            int rw = Mathf.Max(32, Mathf.RoundToInt(h * aspect));
+
+            if (_renderTexture != null && _renderTexture.width == rw && _renderTexture.height == h)
+                return;
+
+            if (_renderTexture != null)
+            {
+                _renderTexture.Release();
+                Destroy(_renderTexture);
+            }
+
+            _renderTexture = new RenderTexture(rw, h, 16, RenderTextureFormat.ARGB32)
+            {
+                name = "MinimapRT",
+                antiAliasing = 1,
+                filterMode = FilterMode.Bilinear
+            };
+            _renderTexture.Create();
+        }
+
+        private void UpdateEnvironmentCameraIfNeeded()
+        {
+            if (!useCameraRendering || _minimapCamera == null || mapPlane == null || environmentView == null)
+                return;
+
+            BuildOrResizeRenderTexture();
+            if (_minimapCamera.targetTexture != _renderTexture)
+                _minimapCamera.targetTexture = _renderTexture;
+            if (environmentView.texture != _renderTexture)
+                environmentView.texture = _renderTexture;
+
+            Vector3 scale = mapPlane.lossyScale;
+            float w = scale.x * planeWorldSize;
+            float d = scale.z * planeWorldSize;
+            Vector3 c = mapPlane.position;
+
+            _minimapCamera.transform.SetPositionAndRotation(
+                c + Vector3.up * cameraHeightAboveMap,
+                Quaternion.Euler(90f, 0f, 0f));
+
+            float aspect = w / Mathf.Max(0.001f, d);
+            _minimapCamera.aspect = aspect;
+            _minimapCamera.orthographicSize = d * 0.5f;
+        }
+
+        private void TeardownEnvironmentCamera()
+        {
+            if (_renderTexture != null)
+            {
+                _renderTexture.Release();
+                Destroy(_renderTexture);
+                _renderTexture = null;
+            }
+
+            if (_cameraHost != null)
+            {
+                Destroy(_cameraHost);
+                _cameraHost = null;
+                _minimapCamera = null;
+            }
+
+            if (environmentView != null)
+                environmentView.texture = null;
         }
 
         private void SyncAgentIcons()

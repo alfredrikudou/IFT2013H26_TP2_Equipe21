@@ -74,7 +74,8 @@ public class GamePauseController : MonoBehaviour
         // Restaurer le temps avant de changer de scène.
         GamePauseState.SetPaused(false);
         Time.timeScale = 1f;
-        UnityEngine.Cursor.visible = false;
+        UnityEngine.Cursor.visible = true;
+        UnityEngine.Cursor.lockState = CursorLockMode.None;
 
         if (!string.IsNullOrEmpty(homeSceneName))
             SceneManager.LoadScene(homeSceneName);
@@ -113,7 +114,7 @@ public class GamePauseController : MonoBehaviour
 
         _playersContainer.Clear();
 
-        var agents = Object.FindObjectsOfType<Agents.Agent>(false)
+        var agents = Object.FindObjectsByType<Agents.Agent>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
             .Where(p => p != null)
             .ToList();
 

@@ -236,7 +236,7 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         if (_players.Count <= 0)
-            if(Keyboard.current.pKey.wasPressedThisFrame)
+            if(Keyboard.current.escapeKey.wasPressedThisFrame)
                 FindFirstObjectByType<GamePauseController>()?.Pause();
     }
 

@@ -35,6 +35,14 @@ public class MainMenuController : MonoBehaviour
     private readonly TextField[] _nameFields = new TextField[4];
     private Label _creditsLabel;
 
+    private void OnEnable()
+    {
+        // Après Minigame (curseur masqué en jeu / reprise), garantir un pointeur utilisable au menu.
+        // Qualification explicite : UI Toolkit expose aussi une classe Cursor.
+        UnityEngine.Cursor.visible = true;
+        UnityEngine.Cursor.lockState = CursorLockMode.None;
+    }
+
     private void Awake()
     {
         _document = GetComponent<UIDocument>();

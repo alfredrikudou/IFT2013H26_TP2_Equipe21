@@ -62,7 +62,8 @@ namespace UI
             // Restaurer le temps avant de changer de scène.
             GamePauseState.SetPaused(false);
             Time.timeScale = 1f;
-            UnityEngine.Cursor.visible = false;
+            UnityEngine.Cursor.visible = true;
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
 
             if (!string.IsNullOrEmpty(homeSceneName))
                 SceneManager.LoadScene(homeSceneName);

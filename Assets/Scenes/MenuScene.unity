@@ -287,7 +287,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
   gameSceneName: Minigame
-  creditsBody: "IFT2013 \u2014 TP2\n\xC9quipe 21"
+  creditsBody: "IFT2013 \u2014 TP2 : Interactivit\xE9\n\xC9quipe 21:\nTristan Perreault
+    (537 233 024)\r\nLuc Alfred Mbida (537 333 752)\r\n"
+  loadingSplashOverride: {fileID: 0}
+  minimumSplashDurationSeconds: 5
 --- !u!114 &2028502037
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -269,9 +269,11 @@ namespace Agents
             _path = path != null && path.Count > 0 ? path.ToArray() : System.Array.Empty<Vector3>();
         }
 
-        private bool IsCloseEnough() =>
-            HorizontalSqrDist(transform.position, _currentTargetPosition)
-            < _aiComfortShotRange * _aiComfortShotRange;
+        private bool IsCloseEnough()
+        {
+            float r = _aiComfortShotRange;
+            return HorizontalSqrDist(transform.position, _currentTargetPosition) <= r * r;
+        }
 
         private bool HasLineOfSight(Vector3 target)
         {

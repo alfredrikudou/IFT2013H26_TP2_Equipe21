@@ -243,7 +243,7 @@ MonoBehaviour:
   _aiMaxAimSeconds: 4
   _aiChargeMin: 0.72
   _aiChargeMax: 1
-  _aiComfortShotRange: 3
+  _aiComfortShotRange: 12
 --- !u!114 &8697016578450955532
 MonoBehaviour:
   m_ObjectHideFlags: 0

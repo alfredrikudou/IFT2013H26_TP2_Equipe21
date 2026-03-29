@@ -43,8 +43,12 @@ namespace Agents
         protected float _charge01 = 0f;
         protected bool _charging = false;
 
-        [Header("Power UI (World Space)")] [SerializeField]
-        protected Slider _powerSlider;
+        [Header("Puissance (UI)")]
+        [Tooltip("Optionnel. Barre 0–1 (souvent world-space auto). Laissez vide si vous utilisez seulement Aim Power Slider (ex. 5–20).")]
+        [SerializeField] protected Slider _powerSlider;
+
+        [Tooltip("HUD joueur recommandé (ex. AimSlider min 5 max 20). Suit la charge au maintien du tir.")]
+        [SerializeField] private Slider aimPowerSlider;
 
         [SerializeField] protected Vector3 _sliderOffset = new Vector3(0f, -0.6f, 0f);
 
@@ -207,6 +211,7 @@ namespace Agents
 
             EnsureFirePoint();
             EnsurePowerSlider();
+            ConfigureAimPowerSlider();
             ResolveNameTextMeshProIfNeeded();
             RefreshNameDisplay();
             if (GetComponent<AgentVisibilityState>() == null)
@@ -227,14 +232,61 @@ namespace Agents
 
         protected virtual void LateUpdate()
         {
-            if (_powerSlider != null)
+            UpdateAimPowerSliderWorldCanvas();
+            UpdateNameLabelBillboard();
+        }
+
+        /// <summary>
+        /// Canvas world-space de l’AimSlider : position au sol, rotation locale uniquement sur Y (lacet) alignée sur la visée horizontale du canon (<see cref="_cannon"/>).
+        /// </summary>
+        private void UpdateAimPowerSliderWorldCanvas()
+        {
+            TryUpdateWorldCanvasForSlider(aimPowerSlider);
+            if (_powerSlider != null && _powerSlider != aimPowerSlider)
+                TryUpdateWorldCanvasForSlider(_powerSlider);
+        }
+
+        private void TryUpdateWorldCanvasForSlider(Slider slider)
+        {
+            if (slider == null) return;
+            Canvas canvas = slider.GetComponentInParent<Canvas>();
+            if (canvas == null || canvas.renderMode != RenderMode.WorldSpace) return;
+            if (canvas.transform is not RectTransform rt) return;
+
+            rt.position = transform.position + _sliderOffset;
+            rt.localRotation = ComputeAimSliderYawOnlyLocalRotation();
+        }
+
+        /// <summary>
+        /// Même base que le prefab (X = 90° pour plaquer l’UI au sol) + lacet dérivé du canon, sans pitch ni roll.
+        /// </summary>
+        private Quaternion ComputeAimSliderYawOnlyLocalRotation()
+        {
+            const float layFlatPitchDeg = 90f;
+
+            if (_cannon == null)
+                return Quaternion.Euler(layFlatPitchDeg, 0f, 0f);
+
+            Vector3 flatWorld = _cannon.forward;
+            flatWorld.y = 0f;
+            if (flatWorld.sqrMagnitude < 1e-6f)
             {
-                var canvas = _powerSlider.GetComponentInParent<Canvas>();
-                if (canvas != null)
-                    canvas.transform.position = transform.position + _sliderOffset;
+                flatWorld = transform.forward;
+                flatWorld.y = 0f;
             }
 
-            UpdateNameLabelBillboard();
+            if (flatWorld.sqrMagnitude < 1e-6f)
+                return Quaternion.Euler(layFlatPitchDeg, 0f, 0f);
+
+            flatWorld.Normalize();
+            Vector3 localDir = transform.InverseTransformDirection(flatWorld);
+            localDir.y = 0f;
+            if (localDir.sqrMagnitude < 1e-6f)
+                return Quaternion.Euler(layFlatPitchDeg, 0f, 0f);
+
+            localDir.Normalize();
+            float yawDeg = Mathf.Atan2(localDir.x, localDir.z) * Mathf.Rad2Deg;
+            return Quaternion.Euler(layFlatPitchDeg, yawDeg, 0f);
         }
 
         /// <summary>
@@ -275,7 +327,11 @@ namespace Agents
 
         private void EnsurePowerSlider()
         {
-            if (_powerSlider != null) return;
+            if (_powerSlider != null || aimPowerSlider != null)
+            {
+                UpdatePowerUI();
+                return;
+            }
 
             var canvasGo = new GameObject("PowerUI");
             canvasGo.transform.SetParent(transform, false);
@@ -303,9 +359,20 @@ namespace Agents
             UpdatePowerUI();
         }
 
+        private void ConfigureAimPowerSlider()
+        {
+            if (aimPowerSlider == null) return;
+            aimPowerSlider.wholeNumbers = false;
+            aimPowerSlider.interactable = false;
+            aimPowerSlider.value = aimPowerSlider.minValue;
+        }
+
         private void UpdatePowerUI()
         {
-            if (_powerSlider != null) _powerSlider.value = _charge01;
+            if (aimPowerSlider != null)
+                aimPowerSlider.value = Mathf.Lerp(aimPowerSlider.minValue, aimPowerSlider.maxValue, _charge01);
+            if (_powerSlider != null && _powerSlider != aimPowerSlider)
+                _powerSlider.value = _charge01;
         }
 
         /// <summary>Si le champ n’est pas relié dans l’inspecteur, cherche un enfant nommé « NameLabel » (n’importe quelle profondeur).</summary>

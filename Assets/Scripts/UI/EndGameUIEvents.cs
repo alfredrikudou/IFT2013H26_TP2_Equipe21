@@ -48,7 +48,12 @@ namespace UI
 
         public void EndGame(string winner)
         {
-            _endgameLabel.text = winner;
+            if (_endgameLabel != null)
+            {
+                _endgameLabel.text = winner;
+                _endgameLabel.style.color = new StyleColor(Color.white);
+            }
+
             Pause();
         }
 

@@ -4,7 +4,7 @@
         <ui:VisualElement class="pause-dialog">
             <ui:Label text="GAME OVER" name="pause-title" class="pause-title"/>
             <ui:VisualElement name="pause-players__container" class="pause-players">
-                <ui:Label text="Label" name="endgame_result_label"/>
+                <ui:Label text="Label" name="endgame_result_label" class="pause-endgame-result"/>
             </ui:VisualElement>
             <ui:VisualElement name="pause-buttons__row" class="pause-buttons">
                 <ui:Button text="Home" name="pause-home__button" class="pause-button"/>

@@ -34,6 +34,16 @@
     border-radius: 8px;
 }
 
+/* Message de fin de partie (gagnant / égalité) — GameManager → EndGameUIEvents */
+.pause-endgame-result {
+    -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
+    font-size: 32px;
+    color: rgb(255, 255, 255);
+    text-shadow: 2px 2px 0 rgb(0, 0, 0);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
 .pause-player-line {
     -unity-font-definition: url("project://database/Assets/Art/Fonts/ChelaOne-Regular.ttf?fileID=12800000&guid=8c2226f5768e49f4ca5f58858a57cb7a&type=3#ChelaOne-Regular");
     font-size: 24px;

@@ -49,7 +49,7 @@ public class CameraController : MonoBehaviour
             if (any) return;
         }
 
-        var players = FindObjectsOfType<Agents.Player>(false);
+        var players = FindObjectsByType<Agents.Player>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         if (players == null || players.Length == 0)
         {
             Debug.LogWarning("[CameraController] Aucun Player trouvé : assignez m_Targets dans l'inspecteur ou ajoutez des joueurs dans la scène.");

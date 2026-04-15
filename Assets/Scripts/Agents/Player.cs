@@ -71,9 +71,9 @@ namespace Agents
             if (state == InputState.Pressed || state == InputState.Held)
                 AddCharge(Time.deltaTime);
 
-            if (_charging && state == InputState.Released)
+            if (Charging && state == InputState.Released)
             {
-                FireShot(_charge01);
+                FireShot(Charge01);
                 ResetCharge();
             }
         }

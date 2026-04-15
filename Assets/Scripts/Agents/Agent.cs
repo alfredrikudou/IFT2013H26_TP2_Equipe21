@@ -31,17 +31,11 @@ namespace Agents
         public float MaxHealth => _maxHealth;
         public float CurrentHealth => _currentHealth;
 
-        [Header("Shooting")] [SerializeField] protected Transform _firePoint;
-        [SerializeField] protected Projectile _projectilePrefab;
+        [Header("Shooting (point de tir — logique dans PlayerShooting)")]
+        [SerializeField] protected Transform _firePoint;
         [SerializeField] protected float _muzzleDistance = 0.8f;
-        [SerializeField] protected float _minShotSpeed = 6f;
-        [SerializeField] protected float _maxShotSpeed = 18f;
-        [SerializeField] protected float _chargeSecondsToMax = 1.2f;
-        [SerializeField] protected float _explosionRadius = 3f;
-        [SerializeField] protected float _explosionMaxDamage = 40f;
-        [SerializeField] protected bool _explosionDamagesShooter = true;
-        protected float _charge01 = 0f;
-        protected bool _charging = false;
+
+        protected PlayerShooting _playerShooting;
 
         [Header("Puissance (UI)")]
         [Tooltip("Optionnel. Barre 0–1 (souvent world-space auto). Laissez vide si vous utilisez seulement Aim Power Slider (ex. 5–20).")]
@@ -64,7 +58,10 @@ namespace Agents
         private static int nameCount = 0;
         protected string _name = $"Agent {nameCount++}";
         
-        public float Charge01 => _charge01;
+        public float Charge01 => _playerShooting != null ? _playerShooting.Charge01 : 0f;
+
+        /// <summary>Indique si le joueur maintient la charge (pour relâcher le tir).</summary>
+        public bool Charging => _playerShooting != null && _playerShooting.IsCharging;
         /// <summary>Caméra du slot (split-screen) — utilisée par le culling logique / silhouette.</summary>
         public Camera ViewCamera => _camera;
         public Transform Cannon => _cannon;
@@ -143,32 +140,19 @@ namespace Agents
                 _cannon.localRotation = Quaternion.Euler(_aimPitch, _aimYaw, 0f);
         }
 
-        public void AddCharge(float dt)
-        {
-            _charging = true;
-            _charge01 += dt / Mathf.Max(0.01f, _chargeSecondsToMax);
-            _charge01 = Mathf.Clamp01(_charge01);
-            UpdatePowerUI();
-        }
+        public void AddCharge(float dt) => _playerShooting?.AddCharge(dt);
 
-        public void ResetCharge()
-        {
-            _charging = false;
-            _charge01 = 0f;
-            UpdatePowerUI();
-        }
+        public void ResetCharge() => _playerShooting?.ResetCharge();
 
-        public void FireShot(float charge01)
-        {
-            if (_projectilePrefab == null || _cannon == null) return;
-            EnsureFirePoint();
-            if (_firePoint == null) return;
+        public bool FireShot(float charge01) => _playerShooting != null && _playerShooting.FireShot(charge01);
 
-            float speed = Mathf.Lerp(_minShotSpeed, _maxShotSpeed, Mathf.Clamp01(charge01));
-            var projectile = Instantiate(_projectilePrefab, _firePoint.position, _firePoint.rotation);
-            projectile.Init(this, _explosionRadius, _explosionMaxDamage, _explosionDamagesShooter, _firePoint.forward,
-                speed);
-        }
+        public void EquipSpecialShell(float damageMultiplier) => _playerShooting?.EquipSpecialShell(damageMultiplier);
+
+        public Vector3 GetProjectileGroundImpact(float charge01) =>
+            _playerShooting != null ? _playerShooting.GetProjectileGroundImpact(charge01) : transform.position;
+
+        /// <summary>Appelé par <see cref="PlayerShooting"/> quand la charge change (UI).</summary>
+        public void NotifyShootingChargeChanged() => UpdatePowerUI();
 
         protected void ApplyMovement()
         {
@@ -208,6 +192,12 @@ namespace Agents
             _rb = GetComponent<Rigidbody>();
             AgentHealth = GetComponent<AgentHealth>();
             _currentHealth = _maxHealth;
+
+            _playerShooting = GetComponent<PlayerShooting>();
+            if (_playerShooting == null)
+                Debug.LogWarning(
+                    "[Agent] Aucun composant PlayerShooting sur ce GameObject. Ajoutez-le dans l’inspecteur ou sur le prefab.",
+                    this);
 
             EnsureFirePoint();
             EnsurePowerSlider();
@@ -369,10 +359,11 @@ namespace Agents
 
         private void UpdatePowerUI()
         {
+            float c = Charge01;
             if (aimPowerSlider != null)
-                aimPowerSlider.value = Mathf.Lerp(aimPowerSlider.minValue, aimPowerSlider.maxValue, _charge01);
+                aimPowerSlider.value = Mathf.Lerp(aimPowerSlider.minValue, aimPowerSlider.maxValue, c);
             if (_powerSlider != null && _powerSlider != aimPowerSlider)
-                _powerSlider.value = _charge01;
+                _powerSlider.value = c;
         }
 
         /// <summary>Si le champ n’est pas relié dans l’inspecteur, cherche un enfant nommé « NameLabel » (n’importe quelle profondeur).</summary>
@@ -397,5 +388,6 @@ namespace Agents
             _nameTextMeshPro.text = _name;
             _nameTextMeshPro.raycastTarget = false;
         }
+
     }
 }

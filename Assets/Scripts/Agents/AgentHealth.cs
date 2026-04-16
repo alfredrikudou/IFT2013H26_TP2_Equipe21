@@ -90,7 +90,7 @@ namespace Agents
             }
         }
 
-        /// <summary>Mort du joueur : effets puis désactivation du tank (compat tutoriel Tanks).</summary>
+        /// <summary>Mort du joueur : effets puis désactivation du personnage.</summary>
         public void HandleDeath()
         {
             if (m_Dead) return;

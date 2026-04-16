@@ -170,10 +170,10 @@ public class CameraController : MonoBehaviour
             // Find the position of the target from the desired position of the camera's local space.
             Vector3 desiredPosToTarget = targetLocalPos - desiredLocalPos;
 
-            // Choose the largest out of the current size and the distance of the tank 'up' or 'down' from the camera.
+            // Choose the largest out of the current size and the distance of the player 'up' or 'down' from the camera.
             size = Mathf.Max(size, Mathf.Abs(desiredPosToTarget.y));
 
-            // Choose the largest out of the current size and the calculated size based on the tank being to the left or right of the camera.
+            // Choose the largest out of the current size and the calculated size based on the player being to the left or right of the camera.
             size = Mathf.Max(size, Mathf.Abs(desiredPosToTarget.x) / m_Camera.aspect);
         }
 

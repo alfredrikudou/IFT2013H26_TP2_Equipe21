@@ -1,0 +1,392 @@
+using System.Collections.Generic;
+using System.Linq;
+using Pathfinding;
+using UnityEngine;
+using Utils;
+using TriangleNet.Geometry;
+using TriangleNet.Meshing;
+using TriangleNet.Meshing.Algorithm;
+using Unity.VisualScripting;
+using UnityEngine.Serialization;
+
+namespace MapGeneration
+{
+    public class TerrainGenerator : MonoBehaviour
+    {
+        [SerializeField] public int seed = 232232;
+        [Header("Terrain settings")]
+        [SerializeField] private int mapSamplingSize = 100;
+        [SerializeField] private int mapMinVertices = 15;
+        [SerializeField] private int mapMaxVertices = 45;
+        [SerializeField] private float wallHeight = 5;
+        [SerializeField] private float nodeDensity = 10f;
+        [SerializeField] private Material terrainMaterial;
+        [SerializeField] private Material wallMaterial;
+        [SerializeField] private GameObject walkerPrefab;
+        [SerializeField] private GameObject groundGo;
+        [SerializeField] private GameObject wallGo;
+        
+        [Header("Heightmap settings")]
+        [SerializeField] private float maxNoiseScale = 0.07f;
+        [SerializeField] private float minNoiseScale = 0.02f;
+        [SerializeField] private float maxNoiseAmplification = 7;
+        [SerializeField] private float minNoiseAmplification = 1;
+        
+        [Header("Region settings")]
+        [SerializeField] private bool useZoneRange = false;
+        [SerializeField] private int maxRangeZoneCount = 10;
+        [SerializeField] private int minRangeZoneCount = 7;
+        [SerializeField] private int maxZoneSize = 40;
+        [SerializeField] private int minZoneSize = 20;
+        
+        [Header("Obstacle settings")]
+        [SerializeField] private bool useObstacleRange = false;
+        [SerializeField] private int maxRangeObstacleCount = int.MaxValue;
+        [SerializeField] private int minRangeObstacleCount = 0;
+        [SerializeField] private int maxObstacleDistance = 20;
+        [SerializeField] private int minObstacleDistance = 5;
+        [SerializeField] private float maxObstacleSize = 2f;
+        [SerializeField] private float minObstacleSize = 0.5f;
+        [SerializeField] private GameObject obstaclePrefab;
+        [SerializeField] private GameObject obstacleParent;
+        
+        
+        [Header("Vegetation settings")]
+        [SerializeField] private bool useVegetationRange = false;
+        [SerializeField] private int maxRangeVegetationCount = int.MaxValue;
+        [SerializeField] private int minRangeVegetationCount = 0;
+        [SerializeField] private int maxVegetationDistance = 10;
+        [SerializeField] private int minVegetationDistance = 3;
+        [SerializeField] private GameObject[] vegetationPrefabs;
+        [SerializeField] private GameObject vegetationParent;
+        
+        
+        
+        private List<Vector2> _zones = new List<Vector2>();
+        private List<ZoneInfo> _zoneInfos = new List<ZoneInfo>();
+        private List<Vector2> _polygonVertices = new List<Vector2>();
+        private readonly List<Vector3> points = new List<Vector3>();
+        private Node[,] _mapGrid;
+
+        private PerlinNoise2D _heightPerlin;
+        private float _checkSphereRadius;
+        private LayerMask _wallLayer;
+
+        public void Awake()
+        {
+            Random.InitState(seed);
+            SetupHeightMap();
+            GeneratePolygon();
+            GenerateZones();
+            SetWalkerSize();
+            GenerateMapGrid();
+            BuildPlane();
+            BuildWalls();
+            SpawnObstacles();
+            SpawnVegetation();
+        }
+
+        public Node[,] GetMap() => _mapGrid;
+
+        private void SetupHeightMap()
+        {
+            _heightPerlin = new PerlinNoise2D(Random.Range(minNoiseScale, maxNoiseScale), Random.Range(minNoiseAmplification, maxNoiseAmplification));
+        }
+
+        private void GenerateZones()
+        {
+            if(useZoneRange)
+                _zones = PoissonDiskSampling.Generate2DSampling(mapSamplingSize, mapSamplingSize, minZoneSize,
+                maxZoneSize, Random.Range(minRangeZoneCount, maxRangeZoneCount));
+            else
+                _zones = PoissonDiskSampling.Generate2DSampling(mapSamplingSize, mapSamplingSize, minZoneSize,
+                maxZoneSize);
+            _zones = _zones.Where(x => ConvexShapeGenerator.IsInsideConvex(_polygonVertices, x)).ToList();
+            foreach (var zone in _zones)
+            {
+                var info = new ZoneInfo
+                {
+                    Color = new Color(Random.value, Random.value, Random.value),
+                    Vegetation = Random.Range(0, vegetationPrefabs.Length)
+                };
+                _zoneInfos.Add(info);
+            }
+        }
+
+        private void GeneratePolygon()
+        {
+            _polygonVertices = ConvexShapeGenerator.Generate2DConvexShape(mapSamplingSize, mapSamplingSize,
+                Random.Range(mapMinVertices, mapMaxVertices));
+        }
+
+        private void GenerateMapGrid()
+        {
+            var nodeCount = Mathf.RoundToInt(mapSamplingSize * nodeDensity);
+            var nodeSize = 1f / nodeDensity;
+            _mapGrid = new Node[nodeCount, nodeCount];
+
+            var origin = Vector3.zero + new Vector3(0, _heightPerlin.GetHeight(0, 0), 0);
+            for (int x = 0; x < nodeCount; x++)
+            for (int z = 0; z < nodeCount; z++)
+            {
+                Vector3 worldPos = origin + new Vector3(x * nodeSize, _heightPerlin.GetHeight(x * nodeSize, z * nodeSize), z * nodeSize);
+                bool isInsidePolygon = ConvexShapeGenerator.IsInsideConvex(_polygonVertices, worldPos);
+                bool walkable = !Physics.CheckSphere(worldPos, _checkSphereRadius, _wallLayer)
+                                && isInsidePolygon;
+                _mapGrid[x, z] = new Node(new Vector2Int(x, z), worldPos, walkable);
+                if (isInsidePolygon)
+                    points.Add(worldPos);
+            }
+        }
+
+        private void SetWalkerSize()
+        {
+            var capsule = walkerPrefab.GetComponent<CapsuleCollider>();
+            var sphere = walkerPrefab.GetComponent<SphereCollider>();
+            var box = walkerPrefab.GetComponent<BoxCollider>();
+            var col = walkerPrefab.GetComponentInChildren<Collider>();
+
+            _checkSphereRadius = capsule != null ? capsule.radius :
+                sphere != null ? sphere.radius :
+                box != null ? Mathf.Min(box.size.x, box.size.z) * 0.5f :
+                col != null && col is CapsuleCollider cc ? cc.radius :
+                col != null && col is SphereCollider sc ? sc.radius :
+                0.5f;
+        }
+
+        private void BuildWalls()
+        {
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> triangles = new List<int>();
+
+            for (int i = 0; i < _polygonVertices.Count; i++)
+            {
+                Vector3 a = NodeFromWorldPoint(new Vector3(_polygonVertices[i].x, 0, _polygonVertices[i].y)).WorldPos;
+                Vector3 b = NodeFromWorldPoint(new Vector3(_polygonVertices[(i + 1) % _polygonVertices.Count].x, 0,
+                    _polygonVertices[(i + 1) % _polygonVertices.Count].y)).WorldPos;
+
+                Vector3 a0 = a;
+                Vector3 b0 = b;
+
+                Vector3 a1 = new Vector3(a.x, a.y + wallHeight, a.z);
+                Vector3 b1 = new Vector3(b.x, b.y + wallHeight, b.z);
+
+                int start = vertices.Count;
+
+                vertices.Add(a0);
+                vertices.Add(b0);
+                vertices.Add(b1);
+                vertices.Add(a1);
+
+                triangles.Add(start + 0);
+                triangles.Add(start + 1);
+                triangles.Add(start + 2);
+
+                triangles.Add(start + 0);
+                triangles.Add(start + 2);
+                triangles.Add(start + 3);
+            }
+
+            Mesh newMesh = new Mesh();
+            newMesh.SetVertices(vertices);
+            newMesh.SetTriangles(triangles, 0);
+
+            newMesh.RecalculateNormals();
+            newMesh.RecalculateBounds();
+            newMesh.colors = ColorizeZones(newMesh.vertices);
+
+            var meshFilter = wallGo.GetComponent<MeshFilter>();
+            var meshRenderer = wallGo.GetComponent<MeshRenderer>();
+            var meshCollider = wallGo.GetComponent<MeshCollider>();
+            meshFilter.mesh = newMesh;
+            meshRenderer.material = new Material(wallMaterial);
+            meshCollider.sharedMesh = null;
+            meshCollider.sharedMesh = newMesh;
+        }
+
+        private Node NodeFromWorldPoint(Vector3 worldPos)
+        {
+            int x = Mathf.Clamp(Mathf.RoundToInt((worldPos.x) * nodeDensity), 0,
+                (int)(mapSamplingSize * nodeDensity) - 1);
+            int z = Mathf.Clamp(Mathf.RoundToInt((worldPos.z) * nodeDensity), 0,
+                (int)(mapSamplingSize * nodeDensity) - 1);
+            return _mapGrid[x, z];
+        }
+
+        private void BuildPlane()
+        {
+            Polygon polygon = new Polygon();
+            foreach (var p in points)
+            {
+                polygon.Add(new Vertex(p.x, p.z));
+            }
+
+            var mesh = polygon.Triangulate();
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> triangles = new List<int>();
+
+            Dictionary<int, int> indexMap = new Dictionary<int, int>();
+            int index = 0;
+            foreach (var v in mesh.Vertices)
+            {
+                indexMap[v.ID] = index++;
+                vertices.Add(NodeFromWorldPoint(new Vector3((float)v.X, 0, (float)v.Y)).WorldPos);
+            }
+
+            foreach (var tri in mesh.Triangles)
+            {
+                triangles.Add(indexMap[tri.GetVertexID(0)]);
+                triangles.Add(indexMap[tri.GetVertexID(2)]);
+                triangles.Add(indexMap[tri.GetVertexID(1)]);
+            }
+
+            _polygonVertices = GetOrderedBoundaryPoints(vertices, triangles);
+            Mesh newMesh = new Mesh();
+            newMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            newMesh.vertices = vertices.ToArray();
+            newMesh.triangles = triangles.ToArray();
+            newMesh.colors = ColorizeZones(newMesh.vertices);
+            newMesh.RecalculateNormals();
+            newMesh.RecalculateBounds();
+            
+            var meshFilter = groundGo.GetComponent<MeshFilter>();
+            var meshRenderer = groundGo.GetComponent<MeshRenderer>();
+            var meshCollider = groundGo.GetComponent<MeshCollider>();
+            meshFilter.mesh = newMesh;
+            meshRenderer.material = new Material(terrainMaterial);
+            meshCollider.sharedMesh = null;
+            meshCollider.sharedMesh = newMesh;
+        }
+        private List<Vector2> GetOrderedBoundaryPoints(List<Vector3> vertices, List<int> triangles)
+        {
+            Dictionary<(int, int), int> edgeCount = new Dictionary<(int, int), int>();
+            for (int i = 0; i < triangles.Count; i += 3)
+            {
+                CountEdge(edgeCount, triangles[i],     triangles[i + 1]);
+                CountEdge(edgeCount, triangles[i + 1], triangles[i + 2]);
+                CountEdge(edgeCount, triangles[i + 2], triangles[i]);
+            }
+
+            Dictionary<int, List<int>> adjacency = new Dictionary<int, List<int>>();
+            foreach (var kvp in edgeCount)
+            {
+                if (kvp.Value != 1) continue;
+                int a = kvp.Key.Item1, b = kvp.Key.Item2;
+
+                if (!adjacency.ContainsKey(a)) adjacency[a] = new List<int>();
+                if (!adjacency.ContainsKey(b)) adjacency[b] = new List<int>();
+                adjacency[a].Add(b);
+                adjacency[b].Add(a);
+            }
+
+            List<Vector2> ordered = new List<Vector2>();
+            HashSet<int> visited = new HashSet<int>();
+
+            int current = adjacency.Keys.First();
+            int prev = -1;
+
+            while (true)
+            {
+                visited.Add(current);
+                ordered.Add(new Vector2(vertices[current].x, vertices[current].z));
+
+                int next = -1;
+                foreach (var neighbor in adjacency[current])
+                {
+                    if (neighbor != prev && !visited.Contains(neighbor))
+                    {
+                        next = neighbor;
+                        break;
+                    }
+                }
+
+                if (next == -1) break;
+                prev = current;
+                current = next;
+            }
+
+            return ordered;
+        }
+        private void CountEdge(Dictionary<(int, int), int> dict, int a, int b)
+        {
+            var key = a < b ? (a, b) : (b, a);
+            dict[key] = dict.ContainsKey(key) ? dict[key] + 1 : 1;
+        }
+
+        private int FindNearestZoneIndex(Vector2 pos)
+        {
+            int nearest = 0;
+            float minDist = float.MaxValue;
+            for (int j = 0; j < _zones.Count; j++)
+            {
+                float dist = Vector2.Distance(pos, _zones[j]);
+                if (dist < minDist) { minDist = dist; nearest = j; }
+            }
+            return nearest;
+        }
+        
+        private Color[] ColorizeZones(Vector3[] vertices)
+        {
+            Color[] vertexColors = new Color[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                int nearest = FindNearestZoneIndex(new Vector2(vertices[i].x, vertices[i].z));
+                vertexColors[i] = _zoneInfos[nearest].Color;
+            }
+            return vertexColors;
+        }
+
+        private void SpawnObstacles()
+        {
+            List<Vector2> obstacles;
+            if (useObstacleRange)
+                obstacles = PoissonDiskSampling.Generate2DSampling(mapSamplingSize, mapSamplingSize, minObstacleDistance,
+                    maxObstacleDistance, Random.Range(minRangeObstacleCount, maxRangeObstacleCount));
+            else
+                obstacles = PoissonDiskSampling.Generate2DSampling(mapSamplingSize, mapSamplingSize, minObstacleDistance,
+                    maxObstacleDistance);
+            obstacles = obstacles.Where(x => ConvexShapeGenerator.IsInsideConvex(_polygonVertices, x)).ToList();
+            foreach (var obstacle in obstacles)
+            {
+                var scaleX = Random.Range(minObstacleSize, maxObstacleSize);
+                var scaleY = Random.Range(minObstacleSize, maxObstacleSize);
+                var scaleZ = Random.Range(minObstacleSize, maxObstacleSize);
+                var spawnNodePos = NodeFromWorldPoint(new Vector3(obstacle.x, 0f, obstacle.y)).WorldPos;
+                var spawnPos = spawnNodePos + scaleY * Vector3.up;
+                var obj = Instantiate(obstaclePrefab, spawnPos, Quaternion.identity, obstacleParent.transform);
+                obj.transform.localScale = new Vector3(scaleX, scaleY, scaleZ);
+            }
+        }
+        private void SpawnVegetation()
+        {
+            List<Vector2> vegetationSpawns;
+            if (useVegetationRange)
+                vegetationSpawns = PoissonDiskSampling.Generate2DSampling(mapSamplingSize, mapSamplingSize, minVegetationDistance,
+                    maxVegetationDistance, Random.Range(minRangeVegetationCount, maxRangeVegetationCount));
+            else
+                vegetationSpawns = PoissonDiskSampling.Generate2DSampling(mapSamplingSize, mapSamplingSize, minVegetationDistance,
+                    maxVegetationDistance);
+            vegetationSpawns = vegetationSpawns.Where(x => ConvexShapeGenerator.IsInsideConvex(_polygonVertices, x)).ToList();
+            foreach (var spawn in vegetationSpawns)
+            {
+                var spawnNodePos = NodeFromWorldPoint(new Vector3(spawn.x, 0f, spawn.y)).WorldPos;
+                int nearestZone = FindNearestZoneIndex(new Vector2(spawnNodePos.x, spawnNodePos.z));
+                var vegetation = vegetationPrefabs[_zoneInfos[nearestZone].Vegetation];
+                Instantiate(vegetation, spawnNodePos, Quaternion.identity, vegetationParent.transform);
+            }
+        }
+
+        public List<Vector3> GetSpawnPoints()
+        {
+            List<int> numbers = Enumerable.Range(0, _zones.Count).ToList();
+            ListUtil.Shuffle(numbers);
+            return numbers.Select(index => NodeFromWorldPoint(new Vector3(_zones[index].x, 0f, _zones[index].y)).WorldPos).ToList();
+        }
+
+        private struct ZoneInfo
+        {
+            public Color Color;
+            public int Vegetation;
+        }
+    }
+}

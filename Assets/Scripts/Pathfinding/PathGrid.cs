@@ -26,6 +26,11 @@ namespace Pathfinding
             BuildGrid();
         }
 
+        public PathGrid(Node[,] grid)
+        {
+            Grid = grid;
+        }
+
         public void BuildGrid()
         {
             float worldWidth = _mapPlane.localScale.x * _defaultPlaneSize;

@@ -1,9 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Agents;
+using MapGeneration;
 using UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 public class GameManager : MonoBehaviour
 {
@@ -17,7 +21,7 @@ public class GameManager : MonoBehaviour
     [Header("Spawn")]
     [Tooltip("Si activé, supprime les agents présents et respawn selon le menu (ou 2 humains par défaut en éditeur sans menu).")]
     [SerializeField] private bool spawnPlayersAtStart = true;
-    [SerializeField] private Transform[] spawnPoints = new Transform[0];
+    [SerializeField] private Vector3[] spawnPoints = new Vector3[0];
 
     [Header("Prefabs")]
     [SerializeField] private GameObject playerPrefab;
@@ -51,6 +55,8 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         _matchOver = false;
+        TerrainGenerator terrainGenerator = FindFirstObjectByType<TerrainGenerator>();
+        spawnPoints = terrainGenerator.GetSpawnPoints().ToArray();
         if (spawnPlayersAtStart)
             SpawnAllAgents();
         SetupViewports();
@@ -167,9 +173,9 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    private void TrySpawnPlayerAt(Transform sp, int slotIndex)
+    private void TrySpawnPlayerAt(Vector3 sp, int slotIndex)
     {
-        var go = Instantiate(playerPrefab, sp.position, sp.rotation);
+        var go = Instantiate(playerPrefab, sp + Vector3.up * playerPrefab.transform.localScale.y / 2, Quaternion.identity);
         var player = go != null ? go.GetComponent<Agents.Player>() : null;
         if (player == null)
         {
@@ -184,9 +190,9 @@ public class GameManager : MonoBehaviour
         _agents.Add(player);
     }
 
-    private void TrySpawnAiAt(Transform sp, int slotIndex)
+    private void TrySpawnAiAt(Vector3 sp, int slotIndex)
     {
-        var go = Instantiate(aiPrefab, sp.position, sp.rotation);
+        var go = Instantiate(aiPrefab, sp +Vector3.up * aiPrefab.transform.localScale.y / 2, Quaternion.identity);
         var ai = go != null ? go.GetComponent<Agents.AiController>() : null;
         if (ai == null)
         {

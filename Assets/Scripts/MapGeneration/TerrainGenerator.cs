@@ -161,15 +161,14 @@ namespace MapGeneration
 
             for (int i = 0; i < _polygonVertices.Count; i++)
             {
-                Vector3 a = NodeFromWorldPoint(new Vector3(_polygonVertices[i].x, 0, _polygonVertices[i].y)).WorldPos;
-                Vector3 b = NodeFromWorldPoint(new Vector3(_polygonVertices[(i + 1) % _polygonVertices.Count].x, 0,
-                    _polygonVertices[(i + 1) % _polygonVertices.Count].y)).WorldPos;
+                Vector2 v2a = _polygonVertices[i];
+                Vector2 v2b = _polygonVertices[(i + 1) % _polygonVertices.Count];
 
-                Vector3 a0 = a;
-                Vector3 b0 = b;
+                Vector3 a0 = new Vector3(v2a.x, _heightPerlin.GetHeight(v2a.x, v2a.y), v2a.y);
+                Vector3 b0 = new Vector3(v2b.x, _heightPerlin.GetHeight(v2b.x, v2b.y), v2b.y);
 
-                Vector3 a1 = new Vector3(a.x, a.y + wallHeight, a.z);
-                Vector3 b1 = new Vector3(b.x, b.y + wallHeight, b.z);
+                Vector3 a1 = a0 + Vector3.up * wallHeight;
+                Vector3 b1 = b0 + Vector3.up * wallHeight;
 
                 int start = vertices.Count;
 
@@ -204,15 +203,6 @@ namespace MapGeneration
             meshCollider.sharedMesh = newMesh;
         }
 
-        private Node NodeFromWorldPoint(Vector3 worldPos)
-        {
-            int x = Mathf.Clamp(Mathf.RoundToInt((worldPos.x) * nodeDensity), 0,
-                (int)(mapSamplingSize * nodeDensity) - 1);
-            int z = Mathf.Clamp(Mathf.RoundToInt((worldPos.z) * nodeDensity), 0,
-                (int)(mapSamplingSize * nodeDensity) - 1);
-            return _mapGrid[x, z];
-        }
-
         private void BuildPlane()
         {
             Polygon polygon = new Polygon();
@@ -230,7 +220,7 @@ namespace MapGeneration
             foreach (var v in mesh.Vertices)
             {
                 indexMap[v.ID] = index++;
-                vertices.Add(NodeFromWorldPoint(new Vector3((float)v.X, 0, (float)v.Y)).WorldPos);
+                vertices.Add(new Vector3((float)v.X, _heightPerlin.GetHeight((float)v.x, (float)v.y), (float)v.Y));
             }
 
             foreach (var tri in mesh.Triangles)
@@ -304,6 +294,15 @@ namespace MapGeneration
                 prev = current;
                 current = next;
             }
+            float area = 0;
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                Vector2 curr = ordered[i];
+                Vector2 next = ordered[(i + 1) % ordered.Count];
+                area += (next.x - curr.x) * (next.y + curr.y);
+            }
+            if (area > 0)
+                ordered.Reverse();
 
             return ordered;
         }
@@ -351,7 +350,7 @@ namespace MapGeneration
                 var scaleX = Random.Range(minObstacleSize, maxObstacleSize);
                 var scaleY = Random.Range(minObstacleSize, maxObstacleSize);
                 var scaleZ = Random.Range(minObstacleSize, maxObstacleSize);
-                var spawnNodePos = NodeFromWorldPoint(new Vector3(obstacle.x, 0f, obstacle.y)).WorldPos;
+                var spawnNodePos = new Vector3(obstacle.x, _heightPerlin.GetHeight(obstacle), obstacle.y);
                 var spawnPos = spawnNodePos + scaleY * Vector3.up;
                 var obj = Instantiate(obstaclePrefab, spawnPos, Quaternion.identity, obstacleParent.transform);
                 obj.transform.localScale = new Vector3(scaleX, scaleY, scaleZ);
@@ -369,7 +368,7 @@ namespace MapGeneration
             vegetationSpawns = vegetationSpawns.Where(x => ConvexShapeGenerator.IsInsideConvex(_polygonVertices, x)).ToList();
             foreach (var spawn in vegetationSpawns)
             {
-                var spawnNodePos = NodeFromWorldPoint(new Vector3(spawn.x, 0f, spawn.y)).WorldPos;
+                var spawnNodePos = new Vector3(spawn.x, _heightPerlin.GetHeight(spawn), spawn.y);
                 int nearestZone = FindNearestZoneIndex(new Vector2(spawnNodePos.x, spawnNodePos.z));
                 var vegetation = vegetationPrefabs[_zoneInfos[nearestZone].Vegetation];
                 Instantiate(vegetation, spawnNodePos, Quaternion.identity, vegetationParent.transform);
@@ -380,7 +379,7 @@ namespace MapGeneration
         {
             List<int> numbers = Enumerable.Range(0, _zones.Count).ToList();
             ListUtil.Shuffle(numbers);
-            return numbers.Select(index => NodeFromWorldPoint(new Vector3(_zones[index].x, 0f, _zones[index].y)).WorldPos).ToList();
+            return numbers.Select(index => new Vector3(_zones[index].x, _heightPerlin.GetHeight(_zones[index].x, _zones[index].y), _zones[index].y)).ToList();
         }
 
         private struct ZoneInfo

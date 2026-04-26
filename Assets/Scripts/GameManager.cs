@@ -34,10 +34,19 @@ public class GameManager : MonoBehaviour
     [Header("Audio gameplay")]
     [SerializeField] private AudioSource gameplayMusicSource;
     [SerializeField] [Range(0f, 1f)] private float gameplayMusicBaseVolume = 1f;
+    [Header("Jingles gameplay")]
+    [SerializeField] private AudioSource gameplayJingleSource;
+    [SerializeField] private AudioClip lowHealthJingle;
+    [SerializeField] private AudioClip deathJingle;
+    [SerializeField] [Range(0.05f, 0.95f)] private float lowHealthThreshold = 0.35f;
+    [SerializeField] [Range(0f, 1f)] private float lowHealthResetThreshold = 0.45f;
+    [SerializeField] [Range(0f, 1f)] private float gameplayJingleBaseVolume = 1f;
 
     private readonly List<Agents.Player> _players = new();
     private readonly List<Agents.AiController> _ais = new();
     private readonly List<Agents.Agent> _agents = new();
+    private readonly HashSet<int> _lowHealthJinglePlayedFor = new();
+    private readonly HashSet<int> _deathJinglePlayedFor = new();
     private bool _matchOver;
 
     public bool IsMatchOver => _matchOver;
@@ -61,6 +70,7 @@ public class GameManager : MonoBehaviour
         _matchOver = false;
         GameAudioSettings.OnChanged += ApplyGameplayMusicVolume;
         PlayGameplayMusicIfNeeded();
+        ApplyGameplayJingleVolume();
         TerrainGenerator terrainGenerator = FindFirstObjectByType<TerrainGenerator>();
         spawnPoints = terrainGenerator.GetSpawnPoints().ToArray();
         if (spawnPlayersAtStart)
@@ -108,6 +118,8 @@ public class GameManager : MonoBehaviour
         _players.Clear();
         _ais.Clear();
         _agents.Clear();
+        _lowHealthJinglePlayedFor.Clear();
+        _deathJinglePlayedFor.Clear();
 
         foreach (var p in FindObjectsByType<Agents.Player>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (p != null) Destroy(p.gameObject);
@@ -220,6 +232,7 @@ public class GameManager : MonoBehaviour
     public void OnPlayerHealthChanged(Agents.Agent agent)
     {
         if (agent == null || _matchOver) return;
+        TryPlayDynamicJingles(agent);
 
         var alive = _agents.Where(p => p != null && !p.IsDead).ToList();
 
@@ -290,5 +303,44 @@ public class GameManager : MonoBehaviour
     {
         if (gameplayMusicSource == null) return;
         gameplayMusicSource.volume = gameplayMusicBaseVolume * GameAudioSettings.GameplayMusicVolume;
+        ApplyGameplayJingleVolume();
+    }
+
+    private void TryPlayDynamicJingles(Agents.Agent agent)
+    {
+        if (gameplayJingleSource == null) return;
+
+        int id = agent.GetInstanceID();
+        float hp = agent.HealthNormalized;
+
+        if (agent.IsDead)
+        {
+            if (deathJingle != null && !_deathJinglePlayedFor.Contains(id))
+            {
+                gameplayJingleSource.PlayOneShot(deathJingle);
+                _deathJinglePlayedFor.Add(id);
+            }
+
+            _lowHealthJinglePlayedFor.Remove(id);
+            return;
+        }
+
+        if (hp <= lowHealthThreshold && !_lowHealthJinglePlayedFor.Contains(id))
+        {
+            if (lowHealthJingle != null)
+                gameplayJingleSource.PlayOneShot(lowHealthJingle);
+            _lowHealthJinglePlayedFor.Add(id);
+        }
+        else if (hp >= Mathf.Max(lowHealthThreshold, lowHealthResetThreshold))
+        {
+            // Permet de rejouer le jingle si le joueur repasse en état critique plus tard.
+            _lowHealthJinglePlayedFor.Remove(id);
+        }
+    }
+
+    private void ApplyGameplayJingleVolume()
+    {
+        if (gameplayJingleSource == null) return;
+        gameplayJingleSource.volume = gameplayJingleBaseVolume * GameAudioSettings.GameplayMusicVolume;
     }
 }

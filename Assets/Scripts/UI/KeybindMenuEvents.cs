@@ -15,6 +15,10 @@ namespace UI
     public class KeybindMenuEvents : MonoBehaviour
     {
         public event Action OnBackRequested;
+        [Header("UI SFX")]
+        [SerializeField] private AudioSource uiSfxSource;
+        [SerializeField] private AudioClip uiButtonClickClip;
+        [SerializeField] [Range(0f, 1f)] private float uiButtonClickBaseVolume = 1f;
         private Dictionary<string, Dictionary<string, List<string>>> _binds = new Dictionary<string, Dictionary<string, List<string>>>();
         private Dictionary<string, List<string>> _devices = new Dictionary<string, List<string>>();
         private UIDocument _document;
@@ -26,6 +30,8 @@ namespace UI
             _document = GetComponent<UIDocument>();
             _container = _document.rootVisualElement.Query("Container");
             _playerTabView = _document.rootVisualElement.Q<TabView>("PlayerTabView");
+            _document.rootVisualElement.RegisterCallback<ClickEvent>(evt =>
+                UiButtonClickSfx.TryPlayForButtonClick(evt, uiSfxSource, uiButtonClickClip, uiButtonClickBaseVolume));
             SetMenuVisible(false);
         }
 

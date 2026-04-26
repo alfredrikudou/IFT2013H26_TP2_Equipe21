@@ -164,6 +164,28 @@
     min-width: 480px;
 }
 
+.sound-box {
+    min-width: 560px;
+}
+
+.sound-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.sound-label {
+    font-size: 24px;
+    color: rgb(230, 230, 230);
+    min-width: 180px;
+}
+
+.sound-slider {
+    min-width: 300px;
+}
+
 .credits-text {
     font-size: 22px;
     color: rgb(220, 220, 230);

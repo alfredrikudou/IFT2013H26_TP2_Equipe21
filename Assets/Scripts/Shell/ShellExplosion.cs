@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Agents;
+using AudioSystem;
 using UnityEngine;
 
 namespace Worm
@@ -11,6 +12,7 @@ namespace Worm
         public LayerMask m_TargetMask;
         public ParticleSystem m_ExplosionParticles;
         public AudioSource m_ExplosionAudio;
+        [SerializeField] [Range(0f, 1f)] private float _explosionSfxBaseVolume = 1f;
         [HideInInspector] public float m_MaxLifeTime = 2f;
 
         [HideInInspector] public float m_MaxDamage = 100f;
@@ -63,7 +65,10 @@ namespace Worm
                 m_ExplosionParticles.Play();
 
                 if (m_ExplosionAudio != null)
+                {
+                    m_ExplosionAudio.volume = _explosionSfxBaseVolume * GameAudioSettings.SfxVolume;
                     m_ExplosionAudio.Play();
+                }
 
                 ParticleSystem.MainModule mainModule = m_ExplosionParticles.main;
                 Destroy(m_ExplosionParticles.gameObject, mainModule.duration);

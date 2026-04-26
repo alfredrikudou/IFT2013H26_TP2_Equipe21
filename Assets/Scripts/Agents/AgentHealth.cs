@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using AudioSystem;
 
 namespace Agents
 {
@@ -18,6 +19,7 @@ namespace Agents
 
         [Header("Mort")]
         public GameObject m_ExplosionPrefab;
+        [SerializeField] [Range(0f, 1f)] private float _deathSfxBaseVolume = 1f;
 
         [HideInInspector] public bool m_HasShield;
 
@@ -102,7 +104,10 @@ namespace Agents
                 m_ExplosionParticles.gameObject.SetActive(true);
                 m_ExplosionParticles.Play();
                 if (m_ExplosionAudio != null)
+                {
+                    m_ExplosionAudio.volume = _deathSfxBaseVolume * GameAudioSettings.SfxVolume;
                     m_ExplosionAudio.Play();
+                }
             }
         
             gameObject.SetActive(false);

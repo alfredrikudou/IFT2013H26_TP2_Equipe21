@@ -5,6 +5,7 @@
             <ui:Label text="MAIN MENU" name="headline__label" class="menu-headline"/>
             <ui:Button text="START GAME" name="start-game__button" class="menuRegularButton"/>
             <ui:Button text="CREDITS" name="credits__button" class="menuRegularButton"/>
+            <ui:Button text="SOUND SETTINGS" name="sound-setting__button" class="menuRegularButton"/>
             <ui:Button text="QUIT" name="quit__button" class="menuRegularButton" style="margin-bottom: 50px;"/>
         </ui:VisualElement>
         <ui:VisualElement name="setup-panel" class="overlay-panel" style="display: none;">
@@ -13,25 +14,25 @@
                 <ui:DropdownField label="Nombre de joueurs" name="player-count__dropdown" class="menu-dropdown"/>
                 <ui:VisualElement name="player-row-1" class="setup-row">
                     <ui:VisualElement class="setup-row-top">
-                        <ui:TextField name="p1-name__field" class="setup-name-field" placeholder=""/>
+                        <ui:TextField name="p1-name__field" placeholder="" class="setup-name-field"/>
                         <ui:Toggle text="IA (ordinateur)" name="p1-ai__toggle" class="setup-toggle"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="player-row-2" class="setup-row">
                     <ui:VisualElement class="setup-row-top">
-                        <ui:TextField name="p2-name__field" class="setup-name-field" placeholder=""/>
+                        <ui:TextField name="p2-name__field" placeholder="" class="setup-name-field"/>
                         <ui:Toggle text="IA (ordinateur)" name="p2-ai__toggle" class="setup-toggle"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="player-row-3" class="setup-row">
                     <ui:VisualElement class="setup-row-top">
-                        <ui:TextField name="p3-name__field" class="setup-name-field" placeholder=""/>
+                        <ui:TextField name="p3-name__field" placeholder="" class="setup-name-field"/>
                         <ui:Toggle text="IA (ordinateur)" name="p3-ai__toggle" class="setup-toggle"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="player-row-4" class="setup-row">
                     <ui:VisualElement class="setup-row-top">
-                        <ui:TextField name="p4-name__field" class="setup-name-field" placeholder=""/>
+                        <ui:TextField name="p4-name__field" placeholder="" class="setup-name-field"/>
                         <ui:Toggle text="IA (ordinateur)" name="p4-ai__toggle" class="setup-toggle"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -46,6 +47,26 @@
                 <ui:Label text="Crédits" class="menu-title-small"/>
                 <ui:Label name="credits-body__label" class="credits-text"/>
                 <ui:Button text="Retour" name="credits-back__button" class="menuRegularButton menu-button-small"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="sound-panel" class="overlay-panel" style="display: none;">
+            <ui:VisualElement class="dialog-box sound-box">
+                <ui:Label text="Paramètres audio" class="menu-title-small"/>
+                <ui:VisualElement class="sound-row">
+                    <ui:Label text="Musique menu" class="sound-label"/>
+                    <ui:Slider name="menu-music-volume__slider" low-value="0" high-value="1" value="0.8" show-input-field="true" class="sound-slider"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="sound-row">
+                    <ui:Label text="Musique gameplay" class="sound-label"/>
+                    <ui:Slider name="gameplay-music-volume__slider" low-value="0" high-value="1" value="0.8" show-input-field="true" class="sound-slider"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="sound-row">
+                    <ui:Label text="Effets (SFX)" class="sound-label"/>
+                    <ui:Slider name="sfx-volume__slider" low-value="0" high-value="1" value="0.9" show-input-field="true" class="sound-slider"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="setup-buttons-row">
+                    <ui:Button text="Retour" name="sound-back__button" class="menuRegularButton menu-button-small"/>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="loading-panel" class="loading-fullscreen-root" style="display: none;">

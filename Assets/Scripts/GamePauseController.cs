@@ -15,6 +15,10 @@ using Object = UnityEngine.Object;
 public class GamePauseController : MonoBehaviour
 {
     [SerializeField] private string homeSceneName = "MenuScene";
+    [Header("UI SFX")]
+    [SerializeField] private AudioSource uiSfxSource;
+    [SerializeField] private AudioClip uiButtonClickClip;
+    [SerializeField] [Range(0f, 1f)] private float uiButtonClickBaseVolume = 1f;
     
     public event Action OnSettingsRequested;
 
@@ -26,6 +30,8 @@ public class GamePauseController : MonoBehaviour
     {
         _document = GetComponent<UIDocument>();
         var root = _document.rootVisualElement;
+        root.RegisterCallback<ClickEvent>(evt =>
+            UI.UiButtonClickSfx.TryPlayForButtonClick(evt, uiSfxSource, uiButtonClickClip, uiButtonClickBaseVolume));
 
         _pausePanel = root.Q<VisualElement>("pause-panel");
         _playersContainer = root.Q<VisualElement>("pause-players__container");

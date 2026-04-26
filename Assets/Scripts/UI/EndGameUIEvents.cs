@@ -15,6 +15,10 @@ namespace UI
     public class EndGameUIEvents : MonoBehaviour
     {
         [SerializeField] private string homeSceneName = "MenuScene";
+        [Header("UI SFX")]
+        [SerializeField] private AudioSource uiSfxSource;
+        [SerializeField] private AudioClip uiButtonClickClip;
+        [SerializeField] [Range(0f, 1f)] private float uiButtonClickBaseVolume = 1f;
 
         private UIDocument _document;
         private VisualElement _pausePanel;
@@ -24,6 +28,8 @@ namespace UI
         {
             _document = GetComponent<UIDocument>();
             var root = _document.rootVisualElement;
+            root.RegisterCallback<ClickEvent>(evt =>
+                UiButtonClickSfx.TryPlayForButtonClick(evt, uiSfxSource, uiButtonClickClip, uiButtonClickBaseVolume));
 
             _pausePanel = root.Q<VisualElement>("pause-panel");
             _endgameLabel = root.Q<Label>("endgame_result_label");

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Agents;
+using AudioSystem;
 using MapGeneration;
 using UI;
 using UnityEngine;
@@ -30,6 +31,9 @@ public class GameManager : MonoBehaviour
     [Header("Fin de partie")]
     [SerializeField] private string winnerFormat = "{0} remporte la partie !";
     [SerializeField] private string tieMessage = "Partie terminée — plus aucun survivant";
+    [Header("Audio gameplay")]
+    [SerializeField] private AudioSource gameplayMusicSource;
+    [SerializeField] [Range(0f, 1f)] private float gameplayMusicBaseVolume = 1f;
 
     private readonly List<Agents.Player> _players = new();
     private readonly List<Agents.AiController> _ais = new();
@@ -55,11 +59,18 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         _matchOver = false;
+        GameAudioSettings.OnChanged += ApplyGameplayMusicVolume;
+        PlayGameplayMusicIfNeeded();
         TerrainGenerator terrainGenerator = FindFirstObjectByType<TerrainGenerator>();
         spawnPoints = terrainGenerator.GetSpawnPoints().ToArray();
         if (spawnPlayersAtStart)
             SpawnAllAgents();
         SetupViewports();
+    }
+
+    private void OnDestroy()
+    {
+        GameAudioSettings.OnChanged -= ApplyGameplayMusicVolume;
     }
 
     private void SetupViewports()
@@ -223,6 +234,8 @@ public class GameManager : MonoBehaviour
     {
         if (_matchOver) return;
         _matchOver = true;
+        if (gameplayMusicSource != null)
+            gameplayMusicSource.Stop();
 
         FindFirstObjectByType<EndGameUIEvents>()?.EndGame(endMessage);
     }
@@ -262,5 +275,20 @@ public class GameManager : MonoBehaviour
             .Where(a => a != null && a != self && !a.IsDead)
             .Select(a => a.transform.position)
             .ToList();
+    }
+
+    private void PlayGameplayMusicIfNeeded()
+    {
+        if (gameplayMusicSource == null) return;
+        gameplayMusicSource.loop = true;
+        ApplyGameplayMusicVolume();
+        if (!gameplayMusicSource.isPlaying)
+            gameplayMusicSource.Play();
+    }
+
+    private void ApplyGameplayMusicVolume()
+    {
+        if (gameplayMusicSource == null) return;
+        gameplayMusicSource.volume = gameplayMusicBaseVolume * GameAudioSettings.GameplayMusicVolume;
     }
 }

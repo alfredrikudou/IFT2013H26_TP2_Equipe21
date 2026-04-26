@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using AudioSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -18,11 +19,20 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Texture2D loadingSplashOverride;
     [Tooltip("Durée minimale d’affichage du splash (temps réel), même si la scène est déjà chargée.")]
     [SerializeField] [Min(0f)] private float minimumSplashDurationSeconds = 5f;
+    [Header("Audio menu")]
+    [SerializeField] private AudioSource menuMusicSource;
+    [SerializeField] [Range(0f, 1f)] private float menuMusicBaseVolume = 1f;
+    [SerializeField] private AudioSource uiSfxSource;
+    [SerializeField] private AudioClip uiButtonClickClip;
+    [SerializeField] [Range(0f, 1f)] private float uiButtonClickBaseVolume = 1f;
+    [Header("Animation UI")]
+    [SerializeField] [Min(0.05f)] private float panelFadeDuration = 0.24f;
 
     private UIDocument _document;
     private VisualElement _mainPanel;
     private VisualElement _setupPanel;
     private VisualElement _creditsPanel;
+    private VisualElement _soundPanel;
     private VisualElement _loadingPanel;
     private VisualElement _loadingSplashBg;
     private VisualElement _loadingProgressFill;
@@ -34,6 +44,10 @@ public class MainMenuController : MonoBehaviour
     private readonly VisualElement[] _playerRows = new VisualElement[4];
     private readonly TextField[] _nameFields = new TextField[4];
     private Label _creditsLabel;
+    private Slider _menuMusicVolumeSlider;
+    private Slider _gameplayMusicVolumeSlider;
+    private Slider _sfxVolumeSlider;
+    private Coroutine _panelTransitionRoutine;
 
     private void OnEnable()
     {
@@ -41,16 +55,26 @@ public class MainMenuController : MonoBehaviour
         // Qualification explicite : UI Toolkit expose aussi une classe Cursor.
         UnityEngine.Cursor.visible = true;
         UnityEngine.Cursor.lockState = CursorLockMode.None;
+        GameAudioSettings.OnChanged += OnAudioSettingsChanged;
+        ApplyMenuMusicVolume();
+    }
+
+    private void OnDisable()
+    {
+        GameAudioSettings.OnChanged -= OnAudioSettingsChanged;
     }
 
     private void Awake()
     {
         _document = GetComponent<UIDocument>();
         var root = _document.rootVisualElement;
+        root.RegisterCallback<ClickEvent>(evt =>
+            UI.UiButtonClickSfx.TryPlayForButtonClick(evt, uiSfxSource, uiButtonClickClip, uiButtonClickBaseVolume));
 
         _mainPanel = root.Q<VisualElement>("main-menu__panel");
         _setupPanel = root.Q<VisualElement>("setup-panel");
         _creditsPanel = root.Q<VisualElement>("credits-panel");
+        _soundPanel = root.Q<VisualElement>("sound-panel");
         _loadingPanel = root.Q<VisualElement>("loading-panel");
         _loadingSplashBg = root.Q<VisualElement>("loading-splash__bg");
         _loadingProgressFill = root.Q<VisualElement>("loading-progress__fill");
@@ -83,37 +107,39 @@ public class MainMenuController : MonoBehaviour
         }
 
         _creditsLabel = root.Q<Label>("credits-body__label");
+        _menuMusicVolumeSlider = root.Q<Slider>("menu-music-volume__slider");
+        _gameplayMusicVolumeSlider = root.Q<Slider>("gameplay-music-volume__slider");
+        _sfxVolumeSlider = root.Q<Slider>("sfx-volume__slider");
 
         root.Q<Button>("start-game__button")?.RegisterCallback<ClickEvent>(_ => ShowSetup());
         root.Q<Button>("credits__button")?.RegisterCallback<ClickEvent>(_ => ShowCredits());
+        root.Q<Button>("sound-setting__button")?.RegisterCallback<ClickEvent>(_ => ShowSoundSettings());
         root.Q<Button>("quit__button")?.RegisterCallback<ClickEvent>(_ => QuitGame());
         root.Q<Button>("setup-launch__button")?.RegisterCallback<ClickEvent>(_ => LaunchGame());
         root.Q<Button>("setup-back__button")?.RegisterCallback<ClickEvent>(_ => ShowMainMenu());
         root.Q<Button>("credits-back__button")?.RegisterCallback<ClickEvent>(_ => ShowMainMenu());
+        root.Q<Button>("sound-back__button")?.RegisterCallback<ClickEvent>(_ => ShowMainMenu());
+
+        ConfigureSoundSliders();
+        PlayMenuMusicIfNeeded();
 
         ShowMainMenu();
     }
 
     private void ShowMainMenu()
     {
-        SetDisplay(_mainPanel, true);
-        SetDisplay(_setupPanel, false);
-        SetDisplay(_creditsPanel, false);
+        ShowPanelAnimated(_mainPanel, _setupPanel, _creditsPanel, _soundPanel);
     }
 
     private void ShowSetup()
     {
-        SetDisplay(_mainPanel, false);
-        SetDisplay(_setupPanel, true);
-        SetDisplay(_creditsPanel, false);
+        ShowPanelAnimated(_setupPanel, _mainPanel, _creditsPanel, _soundPanel);
         RefreshPlayerRowsVisibility();
     }
 
     private void ShowCredits()
     {
-        SetDisplay(_mainPanel, false);
-        SetDisplay(_setupPanel, false);
-        SetDisplay(_creditsPanel, true);
+        ShowPanelAnimated(_creditsPanel, _mainPanel, _setupPanel, _soundPanel);
 
         if (_creditsLabel != null)
         {
@@ -124,10 +150,51 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
+    private void ShowSoundSettings()
+    {
+        ShowPanelAnimated(_soundPanel, _mainPanel, _setupPanel, _creditsPanel);
+    }
+
     private static void SetDisplay(VisualElement el, bool visible)
     {
         if (el == null) return;
         el.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+    }
+
+    private void ShowPanelAnimated(VisualElement shown, params VisualElement[] hidden)
+    {
+        if (_panelTransitionRoutine != null)
+            StopCoroutine(_panelTransitionRoutine);
+        _panelTransitionRoutine = StartCoroutine(AnimatePanelTransition(shown, hidden));
+    }
+
+    private IEnumerator AnimatePanelTransition(VisualElement shown, VisualElement[] hidden)
+    {
+        foreach (var el in hidden)
+        {
+            if (el == null) continue;
+            el.style.opacity = 0f;
+            el.style.display = DisplayStyle.None;
+        }
+
+        if (shown == null) yield break;
+        shown.style.display = DisplayStyle.Flex;
+        shown.style.opacity = 0f;
+
+        float t = 0f;
+        float duration = Mathf.Max(0.01f, panelFadeDuration);
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float x = Mathf.Clamp01(t / duration);
+            // Easing cubic pour adoucir l'entrée du panneau.
+            float eased = 1f - Mathf.Pow(1f - x, 3f);
+            shown.style.opacity = eased;
+            yield return null;
+        }
+
+        shown.style.opacity = 1f;
+        _panelTransitionRoutine = null;
     }
 
     private void RefreshPlayerRowsVisibility()
@@ -144,6 +211,9 @@ public class MainMenuController : MonoBehaviour
 
     private void LaunchGame()
     {
+        if (menuMusicSource != null)
+            menuMusicSource.Stop();
+
         int count = 2 + (_playerCountDropdown != null ? _playerCountDropdown.index : 0);
         count = Mathf.Clamp(count, GameManager.MinAgent, GameManager.MaxPlayers);
 
@@ -172,6 +242,68 @@ public class MainMenuController : MonoBehaviour
 
         // Sinon : chargement asynchrone (splash / attente jusqu’à ce que la scène soit prête).
         StartCoroutine(LoadGameSceneAsync(gameSceneName));
+    }
+
+    private void ConfigureSoundSliders()
+    {
+        GameAudioSettings.EnsureLoaded();
+
+        if (_menuMusicVolumeSlider != null)
+        {
+            _menuMusicVolumeSlider.lowValue = 0f;
+            _menuMusicVolumeSlider.highValue = 1f;
+            _menuMusicVolumeSlider.value = GameAudioSettings.MenuMusicVolume;
+            _menuMusicVolumeSlider.RegisterValueChangedCallback(evt =>
+            {
+                GameAudioSettings.MenuMusicVolume = evt.newValue;
+                ApplyMenuMusicVolume();
+            });
+        }
+
+        if (_gameplayMusicVolumeSlider != null)
+        {
+            _gameplayMusicVolumeSlider.lowValue = 0f;
+            _gameplayMusicVolumeSlider.highValue = 1f;
+            _gameplayMusicVolumeSlider.value = GameAudioSettings.GameplayMusicVolume;
+            _gameplayMusicVolumeSlider.RegisterValueChangedCallback(evt =>
+            {
+                GameAudioSettings.GameplayMusicVolume = evt.newValue;
+            });
+        }
+
+        if (_sfxVolumeSlider != null)
+        {
+            _sfxVolumeSlider.lowValue = 0f;
+            _sfxVolumeSlider.highValue = 1f;
+            _sfxVolumeSlider.value = GameAudioSettings.SfxVolume;
+            _sfxVolumeSlider.RegisterValueChangedCallback(evt => { GameAudioSettings.SfxVolume = evt.newValue; });
+        }
+    }
+
+    private void PlayMenuMusicIfNeeded()
+    {
+        if (menuMusicSource == null) return;
+        menuMusicSource.loop = true;
+        ApplyMenuMusicVolume();
+        if (!menuMusicSource.isPlaying)
+            menuMusicSource.Play();
+    }
+
+    private void OnAudioSettingsChanged()
+    {
+        if (_menuMusicVolumeSlider != null)
+            _menuMusicVolumeSlider.SetValueWithoutNotify(GameAudioSettings.MenuMusicVolume);
+        if (_gameplayMusicVolumeSlider != null)
+            _gameplayMusicVolumeSlider.SetValueWithoutNotify(GameAudioSettings.GameplayMusicVolume);
+        if (_sfxVolumeSlider != null)
+            _sfxVolumeSlider.SetValueWithoutNotify(GameAudioSettings.SfxVolume);
+        ApplyMenuMusicVolume();
+    }
+
+    private void ApplyMenuMusicVolume()
+    {
+        if (menuMusicSource == null) return;
+        menuMusicSource.volume = menuMusicBaseVolume * GameAudioSettings.MenuMusicVolume;
     }
 
     private IEnumerator LoadGameSceneAsync(string sceneName)

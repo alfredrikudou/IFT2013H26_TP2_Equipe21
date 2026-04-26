@@ -1,4 +1,5 @@
 using System.Collections;
+using AudioSystem;
 using UnityEngine;
 using Worm;
 
@@ -37,6 +38,7 @@ namespace Agents
         [SerializeField] private AudioSource _shootingAudio;
         [SerializeField] private AudioClip _chargingClip;
         [SerializeField] private AudioClip _fireClip;
+        [SerializeField] [Range(0f, 1f)] private float _shootingBaseVolume = 1f;
 
         private Agent _agent;
         private float _charge01;
@@ -215,6 +217,7 @@ namespace Agents
         {
             if (_shootingAudio == null || _chargingClip == null) return;
             _shootingAudio.clip = _chargingClip;
+            _shootingAudio.volume = _shootingBaseVolume * GameAudioSettings.SfxVolume;
             _shootingAudio.Play();
         }
 
@@ -222,6 +225,7 @@ namespace Agents
         {
             if (_shootingAudio == null || _fireClip == null) return;
             _shootingAudio.clip = _fireClip;
+            _shootingAudio.volume = _shootingBaseVolume * GameAudioSettings.SfxVolume;
             _shootingAudio.Play();
         }
     }

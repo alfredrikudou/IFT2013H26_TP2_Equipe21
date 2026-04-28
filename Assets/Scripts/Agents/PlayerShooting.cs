@@ -162,6 +162,8 @@ namespace Agents
             return true;
         }
 
+        public float GetCooldown() => _shotCooldown;
+
         private void ClearSpecialShellAfterShot()
         {
             if (!_hasSpecialShell) return;

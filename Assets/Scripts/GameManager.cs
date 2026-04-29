@@ -41,6 +41,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] [Range(0.05f, 0.95f)] private float lowHealthThreshold = 0.35f;
     [SerializeField] [Range(0f, 1f)] private float lowHealthResetThreshold = 0.45f;
     [SerializeField] [Range(0f, 1f)] private float gameplayJingleBaseVolume = 1f;
+    [Header("Fin de partie - SFX")]
+    [SerializeField] private AudioSource endMatchSfxSource;
+    [SerializeField] private AudioClip winnerSfx;
+    [SerializeField] private AudioClip tieSfx;
+    [SerializeField] [Range(0f, 1f)] private float endMatchSfxBaseVolume = 1f;
 
     private readonly List<Agents.Player> _players = new();
     private readonly List<Agents.AiController> _ais = new();
@@ -238,17 +243,18 @@ public class GameManager : MonoBehaviour
 
         if (alive.Count <= 1)
         {
-            if (alive.Count == 0) EndMatch(tieMessage);
-            else EndMatch(string.Format(winnerFormat, alive[0].GetName()));
+            if (alive.Count == 0) EndMatch(tieMessage, false);
+            else EndMatch(string.Format(winnerFormat, alive[0].GetName()), true);
         }
     }
 
-    private void EndMatch(string endMessage)
+    private void EndMatch(string endMessage, bool hasWinner)
     {
         if (_matchOver) return;
         _matchOver = true;
         if (gameplayMusicSource != null)
             gameplayMusicSource.Stop();
+        PlayEndMatchSfx(hasWinner);
 
         FindFirstObjectByType<EndGameUIEvents>()?.EndGame(endMessage);
     }
@@ -342,5 +348,13 @@ public class GameManager : MonoBehaviour
     {
         if (gameplayJingleSource == null) return;
         gameplayJingleSource.volume = gameplayJingleBaseVolume * GameAudioSettings.GameplayMusicVolume;
+    }
+
+    private void PlayEndMatchSfx(bool hasWinner)
+    {
+        if (endMatchSfxSource == null) return;
+        AudioClip clip = hasWinner ? winnerSfx : tieSfx;
+        if (clip == null) return;
+        endMatchSfxSource.PlayOneShot(clip, endMatchSfxBaseVolume * GameAudioSettings.SfxVolume);
     }
 }

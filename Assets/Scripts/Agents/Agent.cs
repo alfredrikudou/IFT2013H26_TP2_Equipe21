@@ -1,4 +1,5 @@
 using TMPro;
+using AudioSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +16,21 @@ namespace Agents
         
         [Header("Movement")] [SerializeField] protected float moveSpeed = 5f;
         protected Vector2 _moveInput = Vector2.zero;
+        [Header("Audio - Déplacement")]
+        [SerializeField] private AudioSource _movementAudioSource;
+        [SerializeField] private AudioClip[] _movementClips;
+        [SerializeField] [Range(0f, 1f)] private float _movementBaseVolume = 1f;
+        [SerializeField] private float _movementMinSpeed = 0.8f;
+        [SerializeField] [Min(0.05f)] private float _movementStepIntervalSlow = 0.45f;
+        [SerializeField] [Min(0.05f)] private float _movementStepIntervalFast = 0.22f;
+
+        [Header("Audio - Traversée (foley)")]
+        [SerializeField] private AudioSource _traversalAudioSource;
+        [SerializeField] private AudioClip[] _traversalClips;
+        [SerializeField] [Range(0f, 1f)] private float _traversalBaseVolume = 1f;
+        [SerializeField] private LayerMask _traversalLayers;
+        [SerializeField] private string _traversalTag = "Foliage";
+        [SerializeField] [Min(0f)] private float _traversalCooldown = 0.2f;
         
         [Header("Aim")] [SerializeField] protected Transform _cannon;
         [SerializeField] protected float _aimSpeed = 90f;
@@ -55,6 +71,8 @@ namespace Agents
         [SerializeField] private Vector3 _nameLabelLocalOffset = new Vector3(0f, 0.28f, 0.12f);
 
         protected Rigidbody _rb;
+        private float _movementStepTimer;
+        private float _traversalCooldownTimer;
         private static int nameCount = 0;
         protected string _name = $"Agent {nameCount++}";
         
@@ -218,6 +236,19 @@ namespace Agents
             }
 
             ApplyMovement();
+            UpdateMovementSfx(Time.fixedDeltaTime);
+            if (_traversalCooldownTimer > 0f)
+                _traversalCooldownTimer = Mathf.Max(0f, _traversalCooldownTimer - Time.fixedDeltaTime);
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            TryPlayTraversalSfxFor(other != null ? other.gameObject : null);
+        }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            TryPlayTraversalSfxFor(collision != null && collision.collider != null ? collision.collider.gameObject : null);
         }
 
         protected virtual void LateUpdate()
@@ -387,6 +418,55 @@ namespace Agents
             if (_nameTextMeshPro == null) return;
             _nameTextMeshPro.text = _name;
             _nameTextMeshPro.raycastTarget = false;
+        }
+
+        private void UpdateMovementSfx(float dt)
+        {
+            if (_movementAudioSource == null || _movementClips == null || _movementClips.Length == 0 || IsDead)
+                return;
+
+            Vector3 planarVel = _rb != null ? _rb.linearVelocity : Vector3.zero;
+            planarVel.y = 0f;
+            float speed = planarVel.magnitude;
+            if (speed < _movementMinSpeed)
+            {
+                _movementStepTimer = 0f;
+                return;
+            }
+
+            _movementStepTimer -= dt;
+            if (_movementStepTimer > 0f) return;
+
+            float speed01 = Mathf.Clamp01(speed / Mathf.Max(0.01f, moveSpeed));
+            float interval = Mathf.Lerp(_movementStepIntervalSlow, _movementStepIntervalFast, speed01);
+            _movementStepTimer = Mathf.Max(0.01f, interval);
+
+            AudioClip clip = PickRandomClip(_movementClips);
+            if (clip == null) return;
+            _movementAudioSource.PlayOneShot(clip, _movementBaseVolume * GameAudioSettings.SfxVolume);
+        }
+
+        private void TryPlayTraversalSfxFor(GameObject go)
+        {
+            if (go == null || IsDead) return;
+            if (_traversalAudioSource == null || _traversalClips == null || _traversalClips.Length == 0) return;
+            if (_traversalCooldownTimer > 0f) return;
+
+            bool layerMatch = _traversalLayers.value != 0 && ((_traversalLayers.value & (1 << go.layer)) != 0);
+            bool tagMatch = !string.IsNullOrWhiteSpace(_traversalTag) && go.tag == _traversalTag;
+            if (!layerMatch && !tagMatch) return;
+
+            AudioClip clip = PickRandomClip(_traversalClips);
+            if (clip == null) return;
+            _traversalAudioSource.PlayOneShot(clip, _traversalBaseVolume * GameAudioSettings.SfxVolume);
+            _traversalCooldownTimer = _traversalCooldown;
+        }
+
+        private static AudioClip PickRandomClip(AudioClip[] clips)
+        {
+            if (clips == null || clips.Length == 0) return null;
+            int idx = Random.Range(0, clips.Length);
+            return clips[idx];
         }
 
     }

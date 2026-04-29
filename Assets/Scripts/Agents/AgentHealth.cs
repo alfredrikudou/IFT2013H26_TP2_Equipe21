@@ -20,6 +20,9 @@ namespace Agents
         [Header("Mort")]
         public GameObject m_ExplosionPrefab;
         [SerializeField] [Range(0f, 1f)] private float _deathSfxBaseVolume = 1f;
+        [SerializeField] private AudioSource _deathAudioSource;
+        [SerializeField] private AudioClip _deathClip;
+        [SerializeField] [Range(0f, 1f)] private float _deathClipBaseVolume = 1f;
 
         [HideInInspector] public bool m_HasShield;
 
@@ -109,6 +112,9 @@ namespace Agents
                     m_ExplosionAudio.Play();
                 }
             }
+
+            if (_deathAudioSource != null && _deathClip != null)
+                _deathAudioSource.PlayOneShot(_deathClip, _deathClipBaseVolume * GameAudioSettings.SfxVolume);
         
             gameObject.SetActive(false);
         }

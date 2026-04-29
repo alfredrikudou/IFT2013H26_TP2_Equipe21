@@ -23,6 +23,7 @@ namespace Agents
         [SerializeField] private float _movementMinSpeed = 0.8f;
         [SerializeField] [Min(0.05f)] private float _movementStepIntervalSlow = 0.45f;
         [SerializeField] [Min(0.05f)] private float _movementStepIntervalFast = 0.22f;
+        [SerializeField] private bool _stopMovementAudioWhenIdle = true;
 
         [Header("Audio - Traversée (foley)")]
         [SerializeField] private AudioSource _traversalAudioSource;
@@ -73,6 +74,7 @@ namespace Agents
         protected Rigidbody _rb;
         private float _movementStepTimer;
         private float _traversalCooldownTimer;
+        private bool _movementAudioSharedWithShooting;
         private static int nameCount = 0;
         protected string _name = $"Agent {nameCount++}";
         
@@ -216,6 +218,9 @@ namespace Agents
                 Debug.LogWarning(
                     "[Agent] Aucun composant PlayerShooting sur ce GameObject. Ajoutez-le dans l’inspecteur ou sur le prefab.",
                     this);
+            else
+                _movementAudioSharedWithShooting =
+                    _movementAudioSource != null && _movementAudioSource == _playerShooting.ShootingAudioSource;
 
             EnsureFirePoint();
             EnsurePowerSlider();
@@ -431,6 +436,8 @@ namespace Agents
             if (speed < _movementMinSpeed)
             {
                 _movementStepTimer = 0f;
+                if (_stopMovementAudioWhenIdle && !_movementAudioSharedWithShooting && _movementAudioSource.isPlaying)
+                    _movementAudioSource.Stop();
                 return;
             }
 

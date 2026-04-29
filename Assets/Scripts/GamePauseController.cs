@@ -30,6 +30,7 @@ public class GamePauseController : MonoBehaviour
     {
         _document = GetComponent<UIDocument>();
         var root = _document.rootVisualElement;
+        UI.UiButtonWaterFillEffect.AttachToAllButtons(root);
         root.RegisterCallback<ClickEvent>(evt =>
             UI.UiButtonClickSfx.TryPlayForButtonClick(evt, uiSfxSource, uiButtonClickClip, uiButtonClickBaseVolume));
 

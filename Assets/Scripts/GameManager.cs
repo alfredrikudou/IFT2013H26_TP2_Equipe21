@@ -252,8 +252,7 @@ public class GameManager : MonoBehaviour
     {
         if (_matchOver) return;
         _matchOver = true;
-        if (gameplayMusicSource != null)
-            gameplayMusicSource.Stop();
+        PauseGameplayMusicForEndMatch();
         PlayEndMatchSfx(hasWinner);
 
         FindFirstObjectByType<EndGameUIEvents>()?.EndGame(endMessage);
@@ -356,5 +355,14 @@ public class GameManager : MonoBehaviour
         AudioClip clip = hasWinner ? winnerSfx : tieSfx;
         if (clip == null) return;
         endMatchSfxSource.PlayOneShot(clip, endMatchSfxBaseVolume * GameAudioSettings.SfxVolume);
+    }
+
+    private void PauseGameplayMusicForEndMatch()
+    {
+        if (gameplayMusicSource == null) return;
+        if (gameplayMusicSource.isPlaying)
+            gameplayMusicSource.Pause();
+        if (gameplayJingleSource.isPlaying)
+            gameplayJingleSource.Pause();
     }
 }

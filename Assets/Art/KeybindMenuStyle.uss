@@ -45,6 +45,18 @@
     padding-top: 10px;
     padding-bottom: 10px;
     min-width: 200px;
+    rotate: 0deg;
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-color: rgba(255, 255, 255, 0.08);
+    border-right-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-left-color: rgba(255, 255, 255, 0.08);
+    transition-property: scale, rotate, background-color, border-top-color, border-right-color, border-bottom-color, border-left-color;
+    transition-duration: 0.16s;
+    transition-timing-function: ease-out;
 }
 
 .setting-label {
@@ -73,5 +85,16 @@
 }
 
 .setting-button:hover {
-    scale: 1.05 1.05;
+    scale: 1.08 1.08;
+    rotate: -1.2deg;
+    background-color: rgba(255, 220, 130, 0.22);
+    border-top-color: rgba(255, 240, 190, 0.8);
+    border-right-color: rgba(255, 240, 190, 0.8);
+    border-bottom-color: rgba(255, 240, 190, 0.8);
+    border-left-color: rgba(255, 240, 190, 0.8);
+}
+
+.setting-button:active {
+    scale: 0.96 0.96;
+    rotate: 0deg;
 }

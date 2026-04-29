@@ -30,6 +30,7 @@ namespace UI
             _document = GetComponent<UIDocument>();
             _container = _document.rootVisualElement.Query("Container");
             _playerTabView = _document.rootVisualElement.Q<TabView>("PlayerTabView");
+            UiButtonWaterFillEffect.AttachToAllButtons(_document.rootVisualElement);
             _document.rootVisualElement.RegisterCallback<ClickEvent>(evt =>
                 UiButtonClickSfx.TryPlayForButtonClick(evt, uiSfxSource, uiButtonClickClip, uiButtonClickBaseVolume));
             SetMenuVisible(false);
@@ -53,6 +54,7 @@ namespace UI
             _playerTabView.Clear();
             foreach (var bind in _binds)
                 _playerTabView.Add(CreateTab(bind.Key));
+            UiButtonWaterFillEffect.AttachToAllButtons(_document.rootVisualElement);
         }
 
         private void RefreshUI()
@@ -70,6 +72,8 @@ namespace UI
                         _playerTabView.activeTab = tab;
                         break;
                     }
+
+            UiButtonWaterFillEffect.AttachToAllButtons(_document.rootVisualElement);
         }
 
         private Tab CreateTab(string playerName)
@@ -359,6 +363,7 @@ namespace UI
             BuildUI();
             var root = _document.rootVisualElement;
             root.Q<Button>("return-button")?.RegisterCallback<ClickEvent>(_ => Hide());
+            UiButtonWaterFillEffect.AttachToAllButtons(root);
             SetMenuVisible(true);
         }
 

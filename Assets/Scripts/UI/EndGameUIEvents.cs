@@ -28,6 +28,7 @@ namespace UI
         {
             _document = GetComponent<UIDocument>();
             var root = _document.rootVisualElement;
+            UiButtonWaterFillEffect.AttachToAllButtons(root);
             root.RegisterCallback<ClickEvent>(evt =>
                 UiButtonClickSfx.TryPlayForButtonClick(evt, uiSfxSource, uiButtonClickClip, uiButtonClickBaseVolume));
 

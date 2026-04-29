@@ -49,6 +49,7 @@ namespace Agents
 
         public float Charge01 => _charge01;
         public bool IsCharging => _charging;
+        public AudioSource ShootingAudioSource => _shootingAudio;
 
         private void Awake()
         {

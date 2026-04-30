@@ -4842,6 +4842,7 @@ GameObject:
   - component: {fileID: 19807510}
   - component: {fileID: 19960184}
   - component: {fileID: -6988948873659476605}
+  - component: {fileID: -255835903623355410}
   m_Layer: 0
   m_Name: CompleteShellExplosion
   m_TagString: Untagged
@@ -9818,6 +9819,18 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &-255835903623355410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195792}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953bb1af729383141b04b08e4fc4a75b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomParticleSystem.ParticleLifetime
 --- !u!1 &199372
 GameObject:
   m_ObjectHideFlags: 0

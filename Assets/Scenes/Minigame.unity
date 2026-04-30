@@ -1462,10 +1462,14 @@ MonoBehaviour:
   walkerPrefab: {fileID: 4099699840582463440, guid: e6ba7844d2527c4449ac8237372a9896, type: 3}
   groundGo: {fileID: 1145728716}
   wallGo: {fileID: 538054314}
-  maxNoiseScale: 0.07
-  minNoiseScale: 0.02
-  maxNoiseAmplification: 7
-  minNoiseAmplification: 1
+  heightMaxNoiseScale: 0.07
+  heightMinNoiseScale: 0.02
+  heightMaxNoiseAmplification: 7
+  heightMinNoiseAmplification: 1
+  humidityMaxNoiseScale: 0.03
+  humidityMinNoiseScale: 0.008
+  humidityMaxNoiseAmplification: 3
+  humidityMinNoiseAmplification: 0.5
   useZoneRange: 0
   maxRangeZoneCount: 10
   minRangeZoneCount: 7
@@ -1492,6 +1496,11 @@ MonoBehaviour:
   - {fileID: 2121115777601418451, guid: e334e6614ad50f749b0a37528784c614, type: 3}
   - {fileID: 4119340359363394084, guid: 431e05c5e2b18ba4fa6b3b0a6f687786, type: 3}
   vegetationParent: {fileID: 1009055552}
+  maxFogDistance: 50
+  minFogDistance: 10
+  rainThreshold: 0.75
+  fogThreshold: 0.5
+  scorchThreshold: 0.25
 --- !u!4 &1177196465
 Transform:
   m_ObjectHideFlags: 0
@@ -1632,6 +1641,87 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1277716205}
   m_CullTransparentMesh: 1
+--- !u!1 &1284269917
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1284269919}
+  - component: {fileID: 1284269918}
+  m_Layer: 0
+  m_Name: ParticleManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1284269918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1284269917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d01fa1b81f7f444d97bbedd30b6a8d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomParticleSystem.ParticleManager
+  entries:
+  - key: 0
+    prefab: {fileID: 195792, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
+    initialSize: 12
+  - key: 1
+    prefab: {fileID: 151086, guid: 6bc6d0dd8b8428e4ca316513f2cf13c6, type: 3}
+    initialSize: 4
+  - key: 2
+    prefab: {fileID: 5112403345868107898, guid: 6f34ef0d986e9db4199cf75805f79753, type: 3}
+    initialSize: 12
+  - key: 3
+    prefab: {fileID: 2504214343621411470, guid: 3ed0d324122d7b24eaec75c55c74aafc, type: 3}
+    initialSize: 12
+  - key: 4
+    prefab: {fileID: 1141330259687333427, guid: 6718dc24203da53468af9ada8fef7d6d, type: 3}
+    initialSize: 12
+  - key: 5
+    prefab: {fileID: 8771972552311404799, guid: bbf9e36a48d6c5648a13889afab076fd, type: 3}
+    initialSize: 12
+  - key: 6
+    prefab: {fileID: 4021103657954561961, guid: 5c755f9bc5253ea418e919994537dcc7, type: 3}
+    initialSize: 12
+  - key: 7
+    prefab: {fileID: 5880797563127281583, guid: 265d3a5ba69981a4698ceabcedf368b0, type: 3}
+    initialSize: 12
+  - key: 8
+    prefab: {fileID: 2708598583397607911, guid: 6398d43fe79ea0140913dc5530c646af, type: 3}
+    initialSize: 12
+  - key: 9
+    prefab: {fileID: 9025435444988080512, guid: c4cc3cc9ac499864f882426702a19b05, type: 3}
+    initialSize: 8
+  - key: 10
+    prefab: {fileID: 6077168872989578693, guid: f514474ff8e94554d8477de1f2f601b0, type: 3}
+    initialSize: 8
+  - key: 11
+    prefab: {fileID: 1321108297579417204, guid: 24fde9c28fc2b35419581271b3e869a7, type: 3}
+    initialSize: 8
+--- !u!4 &1284269919
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1284269917}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1309994186
 GameObject:
   m_ObjectHideFlags: 0
@@ -1757,7 +1847,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2012028731
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1855,3 +1945,4 @@ SceneRoots:
   - {fileID: 199846013}
   - {fileID: 1177196465}
   - {fileID: 301196527}
+  - {fileID: 1284269919}

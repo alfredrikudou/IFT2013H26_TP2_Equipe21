@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using CustomParticleSystem;
 using Pathfinding;
 using UnityEngine;
 using Utils;
@@ -8,6 +10,7 @@ using TriangleNet.Meshing;
 using TriangleNet.Meshing.Algorithm;
 using Unity.VisualScripting;
 using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 namespace MapGeneration
 {
@@ -27,10 +30,16 @@ namespace MapGeneration
         [SerializeField] private GameObject wallGo;
         
         [Header("Heightmap settings")]
-        [SerializeField] private float maxNoiseScale = 0.07f;
-        [SerializeField] private float minNoiseScale = 0.02f;
-        [SerializeField] private float maxNoiseAmplification = 7;
-        [SerializeField] private float minNoiseAmplification = 1;
+        [SerializeField] private float heightMaxNoiseScale = 0.07f;
+        [SerializeField] private float heightMinNoiseScale = 0.02f;
+        [SerializeField] private float heightMaxNoiseAmplification = 7;
+        [SerializeField] private float heightMinNoiseAmplification = 1;
+        
+        [Header("Heightmap settings")]
+        [SerializeField] private float humidityMaxNoiseScale = 0.03f;
+        [SerializeField] private float humidityMinNoiseScale = 0.008f;
+        [SerializeField] private float humidityMaxNoiseAmplification = 3;
+        [SerializeField] private float humidityMinNoiseAmplification = 0.5f;
         
         [Header("Region settings")]
         [SerializeField] private bool useZoneRange = false;
@@ -60,6 +69,13 @@ namespace MapGeneration
         [SerializeField] private GameObject[] vegetationPrefabs;
         [SerializeField] private GameObject vegetationParent;
         
+        [Header("Biome settings")]
+        [SerializeField] private int maxFogDistance = 50;
+        [SerializeField] private int minFogDistance = 10;
+        [SerializeField] private float rainThreshold = 0.75f;
+        [SerializeField] private float fogThreshold = 0.50f;
+        [SerializeField] private float scorchThreshold = 0.25f;
+        
         
         
         private List<Vector2> _zones = new List<Vector2>();
@@ -69,6 +85,7 @@ namespace MapGeneration
         private Node[,] _mapGrid;
 
         private PerlinNoise2D _heightPerlin;
+        private PerlinNoise2D _humidityPerlin;
         private float _checkSphereRadius;
         private LayerMask _wallLayer;
 
@@ -76,6 +93,7 @@ namespace MapGeneration
         {
             Random.InitState(seed);
             SetupHeightMap();
+            SetupHumidityMap();
             GeneratePolygon();
             GenerateZones();
             SetWalkerSize();
@@ -86,11 +104,21 @@ namespace MapGeneration
             SpawnVegetation();
         }
 
+        public void Start()
+        {
+            SetupBiomeEvents();
+        }
+
         public Node[,] GetMap() => _mapGrid;
 
         private void SetupHeightMap()
         {
-            _heightPerlin = new PerlinNoise2D(Random.Range(minNoiseScale, maxNoiseScale), Random.Range(minNoiseAmplification, maxNoiseAmplification));
+            _heightPerlin = new PerlinNoise2D(Random.Range(heightMinNoiseScale, heightMaxNoiseScale), Random.Range(heightMinNoiseAmplification, heightMaxNoiseAmplification));
+        }
+        
+        private void SetupHumidityMap()
+        {
+            _humidityPerlin = new PerlinNoise2D(Random.Range(humidityMinNoiseScale, humidityMaxNoiseScale), Random.Range(humidityMinNoiseAmplification, humidityMaxNoiseAmplification));
         }
 
         private void GenerateZones()
@@ -372,6 +400,20 @@ namespace MapGeneration
                 int nearestZone = FindNearestZoneIndex(new Vector2(spawnNodePos.x, spawnNodePos.z));
                 var vegetation = vegetationPrefabs[_zoneInfos[nearestZone].Vegetation];
                 Instantiate(vegetation, spawnNodePos, Quaternion.identity, vegetationParent.transform);
+            }
+        }
+        
+        private void SetupBiomeEvents()
+        {
+            List<Vector2> biomeEventsSpawns = PoissonDiskSampling.Generate2DSampling(mapSamplingSize, mapSamplingSize, 
+                minFogDistance, maxVegetationDistance);
+            foreach (var spawn in biomeEventsSpawns)
+            {
+                var humidity = _humidityPerlin.GetHeight(spawn);
+                var spawnNodePos = new Vector3(spawn.x, _heightPerlin.GetHeight(spawn), spawn.y);
+                if (humidity >= rainThreshold) ParticleManager.Instance.Play(ParticleManager.EntryNames.Rain, spawnNodePos + Vector3.up * 10);
+                else if (humidity >= fogThreshold) ParticleManager.Instance.Play(ParticleManager.EntryNames.Fog, spawnNodePos);
+                else if (humidity < scorchThreshold) ParticleManager.Instance.Play(ParticleManager.EntryNames.Scorch, spawnNodePos);
             }
         }
 

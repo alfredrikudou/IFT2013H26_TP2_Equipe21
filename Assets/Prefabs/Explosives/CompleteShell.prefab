@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 10833074}
   - component: {fileID: 11426614}
   - component: {fileID: -927890215427519120}
+  - component: {fileID: -8383732716379346146}
   m_Layer: 0
   m_Name: CompleteShell
   m_TagString: Untagged
@@ -226,12 +227,15 @@ MonoBehaviour:
   m_TargetMask:
     serializedVersion: 2
     m_Bits: 0
-  m_ExplosionParticles: {fileID: 6950372259472959370}
+  _explosionParticleKey: explosion
   m_ExplosionAudio: {fileID: 9184786572633591583}
+  _explosionSfxBaseVolume: 1
   m_MaxLifeTime: 2
   m_MaxDamage: 100
   m_ExplosionForce: 1000
   m_ExplosionRadius: 5
+  m_Shooter: {fileID: 0}
+  m_DamageShooter: 1
 --- !u!114 &-927890215427519120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -261,6 +265,18 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &-8383732716379346146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 192454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953bb1af729383141b04b08e4fc4a75b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomParticleSystem.ParticleLifetime
 --- !u!1001 &6950372259491175068
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -326,11 +342,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
---- !u!198 &6950372259472959370 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 19807510, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}
-  m_PrefabInstance: {fileID: 6950372259491175068}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6950372259491231702 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 486730, guid: 537afde59eeba4c82897def1dccfba0a, type: 3}

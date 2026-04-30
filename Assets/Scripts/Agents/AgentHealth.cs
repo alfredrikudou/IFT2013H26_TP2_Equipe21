@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using AudioSystem;
+using CustomParticleSystem;
 
 namespace Agents
 {
@@ -18,6 +19,7 @@ namespace Agents
         public Color m_ZeroHealthColor = Color.red;
 
         [Header("Mort")]
+        [SerializeField] private ParticleManager.EntryNames _deathParticleKey = ParticleManager.EntryNames.RedExplosion;
         public GameObject m_ExplosionPrefab;
         [SerializeField] [Range(0f, 1f)] private float _deathSfxBaseVolume = 1f;
         [SerializeField] private AudioSource _deathAudioSource;
@@ -101,16 +103,11 @@ namespace Agents
             if (m_Dead) return;
             m_Dead = true;
 
-            if (m_ExplosionParticles != null)
+            ParticleManager.Instance.Play(_deathParticleKey, transform.position);
+            if (m_ExplosionAudio != null)
             {
-                m_ExplosionParticles.transform.position = transform.position;
-                m_ExplosionParticles.gameObject.SetActive(true);
-                m_ExplosionParticles.Play();
-                if (m_ExplosionAudio != null)
-                {
-                    m_ExplosionAudio.volume = _deathSfxBaseVolume * GameAudioSettings.SfxVolume;
-                    m_ExplosionAudio.Play();
-                }
+                m_ExplosionAudio.volume = _deathSfxBaseVolume * GameAudioSettings.SfxVolume;
+                m_ExplosionAudio.Play();
             }
 
             if (_deathAudioSource != null && _deathClip != null)

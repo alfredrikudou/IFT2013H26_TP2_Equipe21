@@ -463,6 +463,7 @@ MonoBehaviour:
   m_FillImage: {fileID: 1862543911094643592}
   m_FullHealthColor: {r: 0, g: 1, b: 0, a: 1}
   m_ZeroHealthColor: {r: 1, g: 0, b: 0, a: 1}
+  _deathParticleKey: 6
   m_ExplosionPrefab: {fileID: 0}
   _deathSfxBaseVolume: 1
   _deathAudioSource: {fileID: 5986372382156106810}
@@ -621,8 +622,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9533ee65cd70e334f8fdd7111cb6ad2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Agents.Animations
-  _recoilDistance: 0.5
-  stretchFactor: 0.02
+  recoilDistance: 0.5
+  stretchFactor: 0.1
   maxStretch: 2
   scaleSmoothing: 0.05
 --- !u!1 &5815051333401397578

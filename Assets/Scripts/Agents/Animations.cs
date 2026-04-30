@@ -1,8 +1,6 @@
 using System.Collections;
-using System.Numerics;
 using UnityEngine;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
+using UnityEngine.Serialization;
 
 namespace Agents
 {
@@ -10,40 +8,27 @@ namespace Agents
     {
         private Transform _canonModel;
         private Transform _canon;
-
         private Transform _agentModel;
-
         private PlayerShooting _playerShooting;
-        [SerializeField] private float _recoilDistance = 0.5f; 
-        private readonly AnimationCurve _shootingAnimationCurve= new AnimationCurve(
-            new Keyframe(0f, 1f, -4f, -4f),
-            new Keyframe(0.2f, 0.6f),
-            new Keyframe(0.5f, 1.2f),
-            new Keyframe(1f, 1f)
-        );
+        private Rigidbody _rigidbody;
+
+        [SerializeField] private float recoilDistance = 0.5f;
         [SerializeField] private float stretchFactor = 0.05f;
         [SerializeField] private float maxStretch = 2f;
+        [SerializeField] private float scaleSmoothing = 0.05f;
 
         private bool _hasStartedCharging = false;
-
         private bool _playShootingAnimation = false;
 
-        private Vector3 _lastPosition;
-        private Vector3 _velocity;
-        [SerializeField] private float scaleSmoothing = 0.05f;
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
             _agentModel = FindChildRecursive(transform, "Model");
             _canonModel = FindChildRecursive(transform, "CanonModel");
             _canon = FindChildRecursive(transform, "Canon");
             _playerShooting = GetComponent<PlayerShooting>();
-            _lastPosition = transform.position;
-            _velocity = Vector3.zero;
-
+            _rigidbody = GetComponent<Rigidbody>();
         }
 
-        // Update is called once per frame
         void Update()
         {
             if (!_hasStartedCharging)
@@ -53,19 +38,19 @@ namespace Agents
                 _playShootingAnimation = true;
                 _hasStartedCharging = false;
             }
-            if(_playShootingAnimation)
+            if (_playShootingAnimation)
             {
                 StartCoroutine(ShootAnimation());
                 _playShootingAnimation = false;
             }
-            _velocity = (transform.position - _lastPosition) / Time.deltaTime;
-            _lastPosition = transform.position;
+
             AnimateMovement(Time.deltaTime);
         }
 
         private void AnimateMovement(float dt)
         {
-            float speed = _velocity.magnitude;
+            Vector3 velocity = _rigidbody.linearVelocity;
+            float speed = velocity.magnitude;
 
             Vector3 targetScale;
             if (speed < 0.01f)
@@ -74,7 +59,7 @@ namespace Agents
             }
             else
             {
-                Vector3 dir = _velocity.normalized;
+                Vector3 dir = velocity.normalized;
                 float stretch = Mathf.Clamp(1f + speed * stretchFactor, 1f, maxStretch);
                 float squash = 1f / Mathf.Sqrt(stretch);
 
@@ -97,10 +82,8 @@ namespace Agents
             {
                 float t = time / firstPhaseDuration;
                 Vector3 startPos = _canon.localPosition;
-                Vector3 backPos = startPos - _canon.forward * -_recoilDistance;
-
+                Vector3 backPos = startPos - _canon.forward * -recoilDistance;
                 _canonModel.localPosition = Vector3.Lerp(startPos, backPos, EaseOutElastic(t));
-
                 time += Time.deltaTime;
                 yield return null;
             }
@@ -109,23 +92,22 @@ namespace Agents
             while (time < secondPhaseDuration)
             {
                 float t = time / secondPhaseDuration;
-
                 Vector3 startPos = _canon.localPosition;
-                Vector3 backPos = startPos - _canon.forward * -_recoilDistance;
+                Vector3 backPos = startPos - _canon.forward * -recoilDistance;
                 _canonModel.localPosition = Vector3.Lerp(backPos, startPos, t);
-
                 time += Time.deltaTime;
                 yield return null;
             }
         }
+
         private float EaseOutElastic(float t)
         {
             float c4 = (2f * Mathf.PI) / 3f;
-            float elastic = t == 0f ? 0f :
+            return t == 0f ? 0f :
                 Mathf.Approximately(t, 1f) ? 1f :
                 Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
-            return elastic;
         }
+
         private Transform FindChildRecursive(Transform parent, string childName)
         {
             foreach (Transform child in parent)

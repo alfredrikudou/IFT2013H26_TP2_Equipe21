@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Agents;
 using AudioSystem;
+using CustomParticleSystem;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Worm
@@ -10,7 +12,15 @@ namespace Worm
     {
         [Tooltip("Filtre optionnel. Si aucun calque n’est coché, tous les calques sont pris en compte (comme le projectile).")]
         public LayerMask m_TargetMask;
-        public ParticleSystem m_ExplosionParticles;
+        private List<ParticleManager.EntryNames> _explosionParticleKey =
+            new List<ParticleManager.EntryNames>() { ParticleManager.EntryNames.DefaultExplosion,
+                ParticleManager.EntryNames.IceExplosion,
+                ParticleManager.EntryNames.FireExplosion,
+                ParticleManager.EntryNames.ElectricExplosion,
+                ParticleManager.EntryNames.LightExplosion,
+                ParticleManager.EntryNames.RedExplosion,
+                ParticleManager.EntryNames.YellowExplosion,
+                ParticleManager.EntryNames.BlueExplosion };
         public AudioSource m_ExplosionAudio;
         [SerializeField] [Range(0f, 1f)] private float _explosionSfxBaseVolume = 1f;
         [HideInInspector] public float m_MaxLifeTime = 2f;
@@ -57,24 +67,15 @@ namespace Worm
                 float dmg = m_MaxDamage * falloff;
                 agent.TakeDamage(dmg);
             }
+            ParticleManager.Instance.Play(_explosionParticleKey[Random.Range(0, _explosionParticleKey.Count)], transform.position);
 
-            if (m_ExplosionParticles != null)
+            if (m_ExplosionAudio != null)
             {
-                m_ExplosionParticles.transform.SetParent(null);
-
-                m_ExplosionParticles.Play();
-
-                if (m_ExplosionAudio != null)
-                {
-                    m_ExplosionAudio.volume = _explosionSfxBaseVolume * GameAudioSettings.SfxVolume;
-                    m_ExplosionAudio.Play();
-                }
-
-                ParticleSystem.MainModule mainModule = m_ExplosionParticles.main;
-                Destroy(m_ExplosionParticles.gameObject, mainModule.duration);
+                m_ExplosionAudio.volume = _explosionSfxBaseVolume * GameAudioSettings.SfxVolume;
+                m_ExplosionAudio.Play();
             }
 
-            Destroy(gameObject);
+            Destroy(gameObject, m_ExplosionAudio.clip.length);
         }
     }
 }

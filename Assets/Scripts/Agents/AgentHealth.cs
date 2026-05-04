@@ -19,7 +19,7 @@ namespace Agents
         public Color m_ZeroHealthColor = Color.red;
 
         [Header("Mort")]
-        [SerializeField] private ParticleManager.EntryNames _deathParticleKey = ParticleManager.EntryNames.RedExplosion;
+        [SerializeField] private ParticleManager.EntryNames _deathParticleKey = ParticleManager.EntryNames.Death;
         public GameObject m_ExplosionPrefab;
         [SerializeField] [Range(0f, 1f)] private float _deathSfxBaseVolume = 1f;
         [SerializeField] private AudioSource _deathAudioSource;
